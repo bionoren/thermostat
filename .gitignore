@@ -1,0 +1,6 @@
+.DS_Store
+thermostat
+thermostat.json
+*.csv
+vendor
+*.pem

@@ -1,0 +1,146 @@
+body {
+    background-color: #888888;
+    color: whitesmoke;
+    font-family: -apple-system, sans-serif;
+}
+
+#currentTemp {
+    font-size: 80pt;
+    width: 100%;
+}
+
+#tempUp, #tempDown {
+    position: absolute;
+    font-size: 40pt;
+    right: 10pt;
+    float: right;
+}
+
+#tempUp {
+    top: 10pt;
+}
+
+#tempDown {
+    top: 60pt;
+    transform: rotate(180deg);
+}
+
+#currentMode {
+    padding-top: 10pt;
+    font-size: 20pt;
+}
+
+#modeSelect, #prioritySelect {
+    -webkit-appearance: listbox;
+    font-size: 20pt;
+    padding-left: 2pt;
+    padding-right: 2pt;
+}
+
+#modeSelect option, #prioritySelect option {
+    -webkit-appearance: listitem;
+}
+
+#bottomBar {
+    position: absolute;
+    left: 0pt;
+    bottom: 0pt;
+    height: 50pt;
+    width: 100%;
+}
+
+#topBar {
+    position: absolute;
+    left: 0pt;
+    top: 10pt;
+    height: 50pt;
+    width: 100%;
+}
+
+#modes, #schedules, #back, #add {
+    position: relative;
+    clear: none;
+    text-align: center;
+    height: 30pt;
+}
+
+.button {
+    -webkit-appearance: default-button;
+    background-color: transparent;
+    font-size: 20pt;
+    color: whitesmoke;
+}
+
+#modes, #back {
+    left: 30pt;
+    float: left;
+    width: 50pt;
+}
+
+#schedules, #add {
+    right: 30pt;
+    float: right;
+    width: 120pt;
+}
+
+#mainList {
+    position: absolute;
+    top: 55pt;
+    width: 100%;
+}
+
+.tablecell {
+    height: 44pt;
+    width: calc(100% - 10pt);
+}
+
+.tablecellTitle {
+    position: absolute;;
+    left: 0pt;
+    float:left;
+    clear:none;
+    font-size: 30pt;
+}
+
+.tablecellRight {
+    float: right;
+    right: 0pt;
+    top: 0pt;
+}
+
+.tablecellSubtitle {
+    font-size: 22pt;
+}
+
+.tablecellDetail {
+    height: 16pt;
+    font-size: 12pt;
+}
+
+.selectedDay {
+    text-decoration: underline;
+}
+
+.unselectedDay {
+    color: black;
+}
+
+input {
+    -webkit-appearance: textfield;
+    font-size: 20pt;
+    padding-left: 2pt;
+    padding-right: 2pt;
+}
+
+#errors {
+    color: red;
+}
+
+.dayBox {
+    -webkit-appearance: checkbox;
+}
+
+.dayPicker {
+    text-align: center;
+    border-spacing: 10pt;
+}

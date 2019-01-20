@@ -1,0 +1,21 @@
+finish addSchedules form
+golang data validation on schedule input
+editSchedules form
+golang temp up/down api
+golang temp up/down api test
+golang mode select api
+golang mode select api test
+web login page
+static DHCP and port forwarding
+rotate secret and certs
+√ new temp sensor driver
+√ script to generate secret
+√ update to go modules
+√ fix the hmac auth test
+
+√ solder in new temp sensor
+√ shorten thermostat wires
+
+test sensor with mild airflow - need fan
+find our common wire?
+test power supply?

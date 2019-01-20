@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <!--https://github.com/Caligatio/jsSHA-->
+    <script type="text/javascript" src="sha3.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script type="text/javaScript">
+        function request(path, data) {
+            let tm = Math.floor(Date.now()/1000);
+            let payload = JSON.stringify(data);
+
+            let key = "h2Ig7D5JHILSNi1ybf33aQmoy3fruUn3sqETVjNBjwcofyIly5nxuKf3yBbK5c6x5f4kZ5ihPD9TFZXOWWUJz74FCUlpAoMHXMXantIVrMBQFVKvh8eRhru0OG+Ckin009QMntYz1TWNo7lXgHCobpziJb/ydZQK1mQU0e9IIiM=";
+            let sig = path+tm+payload;
+
+            let shaObj = new jsSHA("SHA3-512", "TEXT");
+            shaObj.setHMACKey(key, "B64");
+            shaObj.update(sig);
+            let hmac = shaObj.getHMAC("HEX");
+
+            let msg = {
+                "Sig": hmac,
+                "Time": tm,
+                Payload: data
+            };
+            return $.post(path, JSON.stringify(msg))
+        }
+
+        request("/js.js", "").done(function(data) {
+            let js = document.createElement('script');
+            js.language = 'text/javasScript';
+            js.appendChild(document.createTextNode(data));
+            document.getElementsByTagName("head")[0].appendChild(js);
+        });
+    </script>
+</head>
+<body>
+<!-- TODO: I need to provide an authentication page that fetches the actual content and that's it, so I'm not taunting an attacker with what this is for-->
+</body>
+</html>
