@@ -1,0 +1,10 @@
+[Unit]
+Description=Thermostat
+After=multi-user.target
+
+[Service]
+Type=idle
+ExecStart=/home/pi/thermostat/thermostat
+
+[Install]
+WantedBy=multi-user.target

@@ -1,1 +1,1 @@
- rsync -rlpzq --inplace --progress --exclude=".git*" --exclude=".idea*" . raspberrypi:"~/thermostat"
+ rsync -rlpzq --inplace --delete --progress --exclude=".git*" --exclude=".idea*" . raspberrypi:"~/thermostat"
