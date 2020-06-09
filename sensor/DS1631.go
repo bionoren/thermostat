@@ -1,4 +1,4 @@
-package system
+package sensor
 
 import (
 	"github.com/sirupsen/logrus"
@@ -12,8 +12,8 @@ type DS1631 struct {
 	conn conn.Conn
 
 	calibration float64
-	temp float64
-	lastUpdate time.Time
+	temp        float64
+	lastUpdate  time.Time
 }
 
 func NewDS1631(addr uint16, calibration float64) *DS1631 {
@@ -42,7 +42,7 @@ func NewDS1631(addr uint16, calibration float64) *DS1631 {
 
 	return &DS1631{
 		// This is now a point-to-point connection and implements conn.Conn:
-		conn:       &dev,
+		conn:        &dev,
 		calibration: calibration,
 	}
 }
@@ -69,7 +69,7 @@ func (s DS1631) Temperature() float64 {
 			logrus.WithError(err).Error("Unable to get temperature data")
 			continue
 		}
-		if resp[0] & 0x80 == 0x80 {
+		if resp[0]&0x80 == 0x80 {
 			break
 		}
 	}
@@ -94,9 +94,9 @@ func (s DS1631) Temperature() float64 {
 func (s DS1631) celciusFromRaw(data []byte) float64 {
 	celcius := float64(data[0])
 	for i := uint(7); i > 0; i-- {
-		if data[1] & byte(2 << i) > 0 {
-			divisor := 1 << (7-i)
-			celcius += float64(1)/float64(divisor)
+		if data[1]&byte(2<<i) > 0 {
+			divisor := 1 << (7 - i)
+			celcius += float64(1) / float64(divisor)
 		}
 	}
 

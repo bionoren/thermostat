@@ -1,4 +1,4 @@
-package system
+package sensor
 
 import (
 	"github.com/stretchr/testify/assert"
@@ -8,9 +8,9 @@ import (
 func TestFarenheitFromCelcius(t *testing.T) {
 	t.Parallel()
 
-	tests := []struct{
-		name string
-		celcius float64
+	tests := []struct {
+		name      string
+		celcius   float64
 		farenheit float64
 	}{
 		{"40c", 40, 104},

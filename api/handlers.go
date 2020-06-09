@@ -3,20 +3,48 @@ package api
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
-	"github.com/sirupsen/logrus"
 	"net/http"
+	"sort"
 	"thermostat/api/request"
-	"thermostat/db"
+	"thermostat/db/mode"
+	"thermostat/db/setting"
+	"thermostat/db/zone"
+	"thermostat/sensor"
 	"thermostat/system"
 	"time"
 )
 
-func status(_ context.Context, _ json.RawMessage) request.ApiResponse {
+func zones(ctx context.Context, _ json.RawMessage) request.ApiResponse {
+	zones, err := zone.All(ctx)
+	if err != nil {
+		return request.NewResponse(http.StatusInternalServerError, err.Error())
+	}
+
+	msg, err := json.Marshal(zones)
+	if err != nil {
+		return request.NewResponse(http.StatusInternalServerError, err.Error())
+	}
+
+	return request.NewResponse(http.StatusOK, string(msg))
+}
+
+func status(ctx context.Context, msg json.RawMessage) request.ApiResponse {
+	var input struct {
+		ZoneID int64
+	}
+	if err := json.Unmarshal(msg, &input); err != nil {
+		return request.NewResponse(http.StatusBadRequest, err.Error())
+	}
+
+	z, err := system.GetZone(input.ZoneID)
+	if err != nil {
+		return request.NewResponse(http.StatusBadRequest, err.Error())
+	}
+
 	var data struct {
-		ScheduleID   int64
-		ModeID int64
+		ScheduleID  int64
+		ModeID      int64
 		Temperature float64
 		Humidity    float64
 		HeatIndex   float64
@@ -28,273 +56,330 @@ func status(_ context.Context, _ json.RawMessage) request.ApiResponse {
 		Fan         bool
 	}
 
-	config := system.Configuration()
-	setting, err := db.GetSetting(config.SettingID())
-	if err != nil {
-		return request.ApiResponse{http.StatusInternalServerError, err.Error()}
-	}
-	sensor := system.Sensors()[0]
-	sys := system.Systems()[0]
+	config := z.Setting()
+	m:= config.Mode(ctx)
+	sens := z.Sensor()
+	sys := z.Controller()
 
-	data.ScheduleID = config.ID()
-	data.ModeID = config.SettingID()
-	data.Temperature = sensor.Temperature()
-	data.Humidity = sensor.Humidity()
-	data.HeatIndex = system.HeatIndex(data.Temperature, data.Humidity)
-	data.Min = setting.MinTemp()
-	data.Max = setting.MaxTemp()
-	data.Correction = setting.Correction()
+	data.ScheduleID = config.ID
+	data.ModeID = config.ModeID
+	data.Temperature = sens.Temperature()
+	data.Humidity = sens.Humidity()
+	data.HeatIndex = sensor.HeatIndex(data.Temperature, data.Humidity)
+	data.Min = m.MinTemp
+	data.Max = m.MaxTemp
+	data.Correction = m.Correction
 	data.Heat = sys.Heat()
 	data.AC = sys.AC()
 	data.Fan = sys.Fan()
 
-	msg, err := json.Marshal(data)
+	if msg, err = json.Marshal(data); err != nil {
+		return request.NewResponse(http.StatusInternalServerError, err.Error())
+	}
+
+	return request.NewResponse(http.StatusOK, string(msg))
+}
+
+func schedules(ctx context.Context, msg json.RawMessage) request.ApiResponse {
+	var input struct {
+		ZoneID int64
+	}
+	if err := json.Unmarshal(msg, &input); err != nil {
+		return request.NewResponse(http.StatusBadRequest, err.Error())
+	}
+
+	z, err := system.GetZone(input.ZoneID)
 	if err != nil {
-		return request.ApiResponse{http.StatusInternalServerError, err.Error()}
+		return request.NewResponse(http.StatusBadRequest, err.Error())
 	}
 
-	return request.ApiResponse{http.StatusOK, string(msg)}
-}
-
-func schedules(_ context.Context, _ json.RawMessage) request.ApiResponse {
-	settings, err := db.Settings()
+	settings, err := setting.All(ctx, z.ID())
 	if err != nil {
-		return request.ApiResponse{http.StatusInternalServerError, err.Error()}
+		return request.NewResponse(http.StatusInternalServerError, err.Error())
 	}
 
-	msg, err := json.Marshal(settings)
+	msg, err = json.Marshal(settings)
 	if err != nil {
-		return request.ApiResponse{http.StatusInternalServerError, err.Error()}
+		return request.NewResponse(http.StatusInternalServerError, err.Error())
 	}
 
-	return request.ApiResponse{http.StatusOK, string(msg)}
+	return request.NewResponse(http.StatusOK, string(msg))
 }
 
-func modes(_ context.Context, _ json.RawMessage) request.ApiResponse {
-	modes, err := db.Modes()
+func modes(ctx context.Context, msg json.RawMessage) request.ApiResponse {
+	var input struct {
+		ZoneID int64
+	}
+	if err := json.Unmarshal(msg, &input); err != nil {
+		return request.NewResponse(http.StatusBadRequest, err.Error())
+	}
+
+	z, err := system.GetZone(input.ZoneID)
 	if err != nil {
-		return request.ApiResponse{http.StatusInternalServerError, err.Error()}
+		return request.NewResponse(http.StatusBadRequest, err.Error())
 	}
 
-	msg, err := json.Marshal(modes)
+	modes, err := mode.All(ctx, z.ID())
 	if err != nil {
-		return request.ApiResponse{http.StatusInternalServerError, err.Error()}
+		return request.NewResponse(http.StatusInternalServerError, err.Error())
 	}
 
-	return request.ApiResponse{http.StatusOK, string(msg)}
+	msg, err = json.Marshal(modes)
+	if err != nil {
+		return request.NewResponse(http.StatusInternalServerError, err.Error())
+	}
+
+	return request.NewResponse(http.StatusOK, string(msg))
 }
 
-func addSchedule(update chan<- []db.Schedule) handler {
-	return func(_ context.Context, msg json.RawMessage) request.ApiResponse {
-		var data struct {
-			ModeID    int64
-			Priority  db.Priority
-			DayOfWeek int
-			Start     int64
-			End       int64
-			StartTime int
-			EndTime   int
-		}
-
-		if err := json.Unmarshal(msg, &data); err != nil {
-			return request.ApiResponse{http.StatusBadRequest, err.Error()}
-		}
-
-		start := time.Unix(data.Start, 0)
-		end := time.Unix(data.End, 0)
-
-		settings, err := db.Settings()
-		if err != nil {
-			return request.ApiResponse{http.StatusInternalServerError, err.Error()}
-		}
-
-		setting, err := db.AddSetting(data.ModeID, data.Priority, data.DayOfWeek, start, end, data.StartTime, data.EndTime)
-		if err != nil {
-			return request.ApiResponse{http.StatusInternalServerError, err.Error()}
-		}
-
-		update <- append(settings, setting)
-
-		resp, err := json.Marshal(setting)
-		if err != nil {
-			return request.ApiResponse{http.StatusInternalServerError, err.Error()}
-		}
-
-		return request.ApiResponse{http.StatusOK, string(resp)}
+func addSchedule(ctx context.Context, msg json.RawMessage) request.ApiResponse {
+	var data struct {
+		ZoneID    int64
+		ModeID    int64
+		Priority  setting.Priority
+		DayOfWeek int
+		Start     int64
+		End       int64
+		StartTime int
+		EndTime   int
 	}
+
+	if err := json.Unmarshal(msg, &data); err != nil {
+		return request.NewResponse(http.StatusBadRequest, err.Error())
+	}
+
+	z, err := system.GetZone(data.ZoneID)
+	if err != nil {
+		return request.NewResponse(http.StatusBadRequest, err.Error())
+	}
+
+	start := time.Unix(data.Start, 0)
+	end := time.Unix(data.End, 0)
+
+	settings, err := setting.All(ctx, z.ID())
+	if err != nil {
+		return request.NewResponse(http.StatusInternalServerError, err.Error())
+	}
+
+	s, err := setting.New(ctx, z.ID(), data.ModeID, data.Priority, data.DayOfWeek, start, end, data.StartTime, data.EndTime)
+	if err != nil {
+		return request.NewResponse(http.StatusInternalServerError, err.Error())
+	}
+
+	z.Update(append(settings, s))
+
+	resp, err := json.Marshal(s)
+	if err != nil {
+		return request.NewResponse(http.StatusInternalServerError, err.Error())
+	}
+
+	return request.NewResponse(http.StatusOK, string(resp))
 }
 
-func deleteSchedule(update chan<- []db.Schedule) handler {
-	return func(_ context.Context, msg json.RawMessage) request.ApiResponse {
-		var data struct {
-			ID int64
-		}
-
-		if err := json.Unmarshal(msg, &data); err != nil {
-			return request.ApiResponse{http.StatusBadRequest, err.Error()}
-		}
-
-		if err := db.DeleteSetting(data.ID); err != nil {
-			return request.ApiResponse{http.StatusInternalServerError, err.Error()}
-		}
-
-		if err := updateSettings(update); err != nil {
-			return request.ApiResponse{http.StatusAccepted, err.Error()}
-		}
-
-		return request.ApiResponse{http.StatusOK, `{}`}
-	}
-}
-
-type modeData struct {
-	ID         int64
-	Name       string
-	Min        float64
-	Max        float64
-	Correction float64
-}
-
-func (data modeData) validate() error {
-	if len(data.Name) < 2 {
-		return errors.New("name must be at least 2 characters long")
-	}
-	if data.Name == "custom" {
-		return errors.New("\"custom\" is a reserved mode name")
-	}
-	if data.Name == "default" {
-		return errors.New("\"default\" is a reserved mode name")
-	}
-	if data.Max - data.Min < 2 {
-		return errors.New("max temperature must be at least 2 degrees higher than the min temperature")
-	}
-	if data.Correction < 0.5 {
-		return errors.New("correction must be >= 0.5")
-	}
-	if data.Correction*2 > data.Max - data.Min {
-		return errors.New("correction cannot be more than half the difference in temperature range")
+func deleteSchedule(ctx context.Context, msg json.RawMessage) request.ApiResponse {
+	var data struct {
+		ZoneID int64
+		ID     int64
 	}
 
-	return nil
-}
-
-func addMode(update chan<- []db.Schedule) handler {
-	return func(_ context.Context, msg json.RawMessage) request.ApiResponse {
-		var data modeData
-		if err := json.Unmarshal(msg, &data); err != nil {
-			return request.ApiResponse{http.StatusBadRequest, err.Error()}
-		}
-		if err := data.validate(); err != nil {
-			return request.ApiResponse{http.StatusBadRequest, err.Error()}
-		}
-
-		id, err := db.AddMode(data.Name, data.Min, data.Max, data.Correction)
-		if err != nil {
-			return request.ApiResponse{http.StatusInternalServerError, err.Error()}
-		}
-
-		if err := updateSettings(update); err != nil {
-			return request.ApiResponse{http.StatusAccepted, err.Error()}
-		}
-
-		return request.ApiResponse{http.StatusOK, fmt.Sprintf(`{"id": %d}`, id)}
+	if err := json.Unmarshal(msg, &data); err != nil {
+		return request.NewResponse(http.StatusBadRequest, err.Error())
 	}
-}
 
-func editMode(update chan<- []db.Schedule) handler {
-	return func(_ context.Context, msg json.RawMessage) request.ApiResponse {
-		var data modeData
-		if err := json.Unmarshal(msg, &data); err != nil {
-			return request.ApiResponse{http.StatusBadRequest, err.Error()}
-		}
-		if err := data.validate(); err != nil {
-			return request.ApiResponse{http.StatusBadRequest, err.Error()}
-		}
-
-		if err := db.EditMode(data.ID, data.Name, data.Min, data.Max, data.Correction); err != nil {
-			return request.ApiResponse{http.StatusInternalServerError, err.Error()}
-		}
-
-		if err := updateSettings(update); err != nil {
-			return request.ApiResponse{http.StatusAccepted, err.Error()}
-		}
-
-		return request.ApiResponse{}
+	z, err := system.GetZone(data.ZoneID)
+	if err != nil {
+		return request.NewResponse(http.StatusBadRequest, err.Error())
 	}
-}
 
-func deleteMode(update chan<- []db.Schedule) handler {
-	return func(_ context.Context, msg json.RawMessage) request.ApiResponse {
-		var data struct {
-			ID int64
-		}
-
-		if err := json.Unmarshal(msg, &data); err != nil {
-			return request.ApiResponse{http.StatusBadRequest, err.Error()}
-		}
-
-		if err := db.DeleteMode(data.ID); err != nil {
-			return request.ApiResponse{http.StatusInternalServerError, err.Error()}
-		}
-
-		if err := updateSettings(update); err != nil {
-			return request.ApiResponse{http.StatusAccepted, err.Error()}
-		}
-
-		return request.ApiResponse{http.StatusOK, `{}`}
+	settings, err := setting.All(ctx, z.ID())
+	if err != nil {
+		return request.NewResponse(http.StatusInternalServerError, err.Error())
 	}
-}
 
-func editHandler(update chan<- []db.Schedule) handler {
-	return func(_ context.Context, msg json.RawMessage) request.ApiResponse {
-		var data struct {
-			modeID int64
-			delta float64
-		}
-
-		if err := json.Unmarshal(msg, &data); err != nil {
-			return request.ApiResponse{http.StatusBadRequest, err.Error()}
-		}
-
-		current := system.Configuration()
-		setting, err := db.GetSetting(current.SettingID())
-		if err != nil {
-			return request.ApiResponse{http.StatusInternalServerError, err.Error()}
-		}
-
-		modeID := data.modeID
-		if modeID == 0 {
-			modeID, err = db.CustomMode()
-			if err != nil {
-				return request.ApiResponse{http.StatusNotImplemented, err.Error()}
+	for i, s := range settings {
+		if s.ID == data.ID {
+			if err := s.Delete(ctx); err != nil {
+				return request.NewResponse(http.StatusInternalServerError, err.Error())
 			}
-			if err := db.EditMode(modeID, "custom", setting.MinTemp()+data.delta, setting.MaxTemp()+data.delta, setting.Correction()); err != nil {
-				return request.ApiResponse{http.StatusInternalServerError, err.Error()}
-			}
+			settings = append(settings[:i], settings[i+1:]...)
+			break
 		}
-
-		next := system.NextConfigChange()
-		if next.IsZero() {
-			next = time.Now().Add(time.Hour*12)
-		}
-		if _, err := db.AddSetting(modeID, db.OVERRIDE, current.DayOfWeek(), time.Now(), next, 0, 86400); err != nil {
-			return request.ApiResponse{http.StatusInternalServerError, err.Error()}
-		}
-
-		if err := updateSettings(update); err != nil {
-			return request.ApiResponse{http.StatusAccepted, err.Error()}
-		}
-
-		return request.ApiResponse{http.StatusOK, `{}`}
 	}
+
+	z.Update(settings)
+
+	return request.NewResponse(http.StatusOK, `{}`)
 }
 
-func updateSettings(update chan<- []db.Schedule) error {
-	settings, err := db.Settings()
-	if err != nil {
-		logrus.WithError(err).Warn("error loading settings")
-		return err
+func addMode(ctx context.Context, msg json.RawMessage) request.ApiResponse {
+	var data mode.Mode
+	if err := json.Unmarshal(msg, &data); err != nil {
+		return request.NewResponse(http.StatusBadRequest, err.Error())
+	}
+	if err := data.Validate(); err != nil {
+		return request.NewResponse(http.StatusBadRequest, err.Error())
 	}
 
-	update <- settings
-	return nil
+	m, err := mode.New(ctx, data.ZoneID, data.Name, data.MinTemp, data.MaxTemp, data.Correction)
+	if err != nil {
+		return request.NewResponse(http.StatusInternalServerError, err.Error())
+	}
+
+	return request.NewResponse(http.StatusOK, fmt.Sprintf(`{"id": %d}`, m.ID))
+}
+
+func editMode(ctx context.Context, msg json.RawMessage) request.ApiResponse {
+	var m mode.Mode
+	if err := json.Unmarshal(msg, &m); err != nil {
+		return request.NewResponse(http.StatusBadRequest, err.Error())
+	}
+	if err := m.Validate(); err != nil {
+		return request.NewResponse(http.StatusBadRequest, err.Error())
+	}
+
+	z, err := system.GetZone(m.ZoneID)
+	if err != nil {
+		return request.NewResponse(http.StatusBadRequest, err.Error())
+	}
+
+	if err := m.Update(ctx); err != nil {
+		return request.NewResponse(http.StatusInternalServerError, err.Error())
+	}
+
+	settings, err := setting.All(ctx, z.ID())
+	if err != nil {
+		return request.NewResponse(http.StatusInternalServerError, err.Error())
+	}
+	z.Update(settings)
+
+	return request.NewResponse(http.StatusOK, "")
+}
+
+func deleteMode(ctx context.Context, msg json.RawMessage) request.ApiResponse {
+	var m mode.Mode
+	if err := json.Unmarshal(msg, &m); err != nil {
+		return request.NewResponse(http.StatusBadRequest, err.Error())
+	}
+
+	z, err := system.GetZone(m.ZoneID)
+	if err != nil {
+		return request.NewResponse(http.StatusBadRequest, err.Error())
+	}
+
+	settings, err := setting.All(ctx, z.ID())
+	if err != nil {
+		return request.NewResponse(http.StatusInternalServerError, err.Error())
+	}
+
+	for _, s := range settings {
+		if s.ModeID == m.ID {
+			return request.NewResponse(http.StatusBadRequest, fmt.Sprintf("a schedule (%d) depends on mode %d", s.ID, m.ID))
+		}
+	}
+
+	if err := m.Delete(ctx); err != nil {
+		return request.NewResponse(http.StatusInternalServerError, err.Error())
+	}
+
+	return request.NewResponse(http.StatusOK, `{}`)
+}
+
+func editHandler(ctx context.Context, msg json.RawMessage) request.ApiResponse {
+	var data struct {
+		ZoneID int64
+		ModeID int64
+		Delta  float64
+	}
+
+	if err := json.Unmarshal(msg, &data); err != nil {
+		return request.NewResponse(http.StatusBadRequest, err.Error())
+	}
+
+	z, err := system.GetZone(data.ZoneID)
+	if err != nil {
+		return request.NewResponse(http.StatusBadRequest, err.Error())
+	}
+
+	current := z.Setting()
+	currentMode, err := mode.Get(ctx, current.ModeID)
+	if err != nil {
+		return request.NewResponse(http.StatusInternalServerError, err.Error())
+	}
+
+	var custom mode.Mode
+	if data.ModeID != 0 {
+		if custom, err = mode.Get(ctx, data.ModeID); err != nil {
+			return request.NewResponse(http.StatusInternalServerError, err.Error())
+		}
+	} else {
+		modes, err := mode.All(ctx, z.ID())
+		if err != nil {
+			return request.NewResponse(http.StatusInternalServerError, err.Error())
+		}
+
+		for _, m := range modes {
+			if m.Name == "custom" {
+				custom = m
+				break
+			}
+		}
+		custom.MinTemp = currentMode.MinTemp+data.Delta
+		custom.MaxTemp = currentMode.MaxTemp+data.Delta
+		custom.Correction = 1
+		if err := custom.Update(ctx); err != nil {
+			return request.NewResponse(http.StatusInternalServerError, err.Error())
+		}
+	}
+
+	if current.Priority == setting.CUSTOM {
+		if err := current.Delete(ctx); err != nil {
+			return request.NewResponse(http.StatusInternalServerError, err.Error())
+		}
+	}
+	settings, err := setting.All(ctx, z.ID())
+	if err != nil {
+		return request.NewResponse(http.StatusInternalServerError, err.Error())
+	}
+
+	now := time.Now()
+	next := nextConfigChange(now, settings, z.Setting().Priority)
+	if next.IsZero() {
+		next = now.Add(time.Hour * 12)
+	}
+	if s, err := setting.New(ctx, z.ID(), custom.ID, setting.CUSTOM, current.DayOfWeek, now, next, 0, 86400); err != nil {
+		return request.NewResponse(http.StatusInternalServerError, err.Error())
+	} else {
+		settings = append(settings, s)
+	}
+
+	z.Update(settings)
+
+	return request.NewResponse(http.StatusOK, `{}`)
+}
+
+func nextConfigChange(now time.Time, settings []setting.Setting, current setting.Priority) time.Time {
+	type sched struct {
+		runtime time.Time
+		setting setting.Setting
+	}
+
+	starts := make([]sched, len(settings))
+	for i, s := range settings {
+		starts[i] = sched{
+			runtime: s.Runtime(now),
+			setting: s,
+		}
+	}
+
+	sort.Slice(starts, func(i, j int) bool {
+		return starts[i].runtime.Before(starts[j].runtime)
+	})
+
+	for _, s := range starts {
+		if s.setting.Priority >= current && !s.runtime.IsZero() && s.runtime.After(now) {
+			return s.runtime
+		}
+	}
+
+	return time.Time{}
 }

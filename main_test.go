@@ -42,8 +42,7 @@ jiQkB1MbPREIJtsgIQJBAL+ORx9ODd3Dz1VmR6CuXBX6UnCYHnksgZZUyQX9ez5k
 KIztiUEnd9QCL6HahOLxcCDH5HwXF7I7SYE3fuS3kro=
 -----END RSA PRIVATE KEY-----`)
 
-	cert, key, err := loadApiCert()
-	require.NoError(t, err)
+	cert, key := loadApiCert()
 	assert.NotEmpty(t, cert)
 	assert.NotEmpty(t, key)
 

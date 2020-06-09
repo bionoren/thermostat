@@ -4,3 +4,4 @@ thermostat.json
 *.csv
 vendor
 *.pem
+.idea

@@ -1,21 +1,22 @@
-finish addSchedules form
-golang data validation on schedule input
-editSchedules form
-golang temp up/down api
-golang temp up/down api test
-golang mode select api
-golang mode select api test
-web login page
-static DHCP and port forwarding
-rotate secret and certs
+√ golang data validation on schedule input
+√ golang temp up/down api test
+√ golang mode select api test
+√ golang mode select api
 √ new temp sensor driver
 √ script to generate secret
 √ update to go modules
 √ fix the hmac auth test
+√ schedules with the same priority must not overlap
+√ static DHCP
+finish addSchedules form
+temp up/down and custom mode dropdown support
+editSchedules form
+web login page
+port forwarding
+rotate secret and certs
 
 √ solder in new temp sensor
 √ shorten thermostat wires
 
-test sensor with mild airflow - need fan
-find our common wire?
-test power supply?
+test sensor with mild airflow
+test power supply

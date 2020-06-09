@@ -8,7 +8,6 @@ import (
 	golog "log"
 	"net/http"
 	"thermostat/api/web"
-	"thermostat/db"
 	"time"
 )
 
@@ -21,20 +20,21 @@ func (log logWriter) Write(data []byte) (int, error) {
 	return len(data), nil
 }
 
-func StartApi(update chan<- []db.Schedule, cert, key []byte) {
+func StartApi(cert, key []byte) {
 	auth := newHmacAuth(viper.GetString("apiSecret"))
 
 	mux := http.NewServeMux()
+	mux.HandleFunc("/v1/zones", handlerWrapper(zones, auth, false, true))
 	mux.HandleFunc("/v1/status", handlerWrapper(status, auth, false, true))
 	mux.HandleFunc("/v1/schedule", handlerWrapper(schedules, auth, false, true))
-	mux.HandleFunc("/v1/schedule/add", handlerWrapper(addSchedule(update), auth, false, true))
-	mux.HandleFunc("/v1/schedule/delete", handlerWrapper(deleteSchedule(update), auth, false, true))
+	mux.HandleFunc("/v1/schedule/add", handlerWrapper(addSchedule, auth, false, true))
+	mux.HandleFunc("/v1/schedule/delete", handlerWrapper(deleteSchedule, auth, false, true))
 	mux.HandleFunc("/v1/mode", handlerWrapper(modes, auth, false, true))
-	mux.HandleFunc("/v1/mode/add", handlerWrapper(addMode(update), auth, false, true))
-	mux.HandleFunc("/v1/mode/edit", handlerWrapper(editMode(update), auth, false, true))
+	mux.HandleFunc("/v1/mode/add", handlerWrapper(addMode, auth, false, true))
+	mux.HandleFunc("/v1/mode/edit", handlerWrapper(editMode, auth, false, true))
 	// TODO need to be able to validate that the mode isn't used by any schedules
 	// mux.HandleFunc("/v1/mode/delete", handlerWrapper(deleteMode(update), auth, false, true))
-	mux.HandleFunc("/v1/edit", handlerWrapper(editHandler(update), auth, false, true))
+	mux.HandleFunc("/v1/edit", handlerWrapper(editHandler, auth, false, true))
 
 	mux.HandleFunc("/", handlerWrapper(web.Page("index.html"), nullAuth{}, true, false))
 	mux.HandleFunc("/sha3.js", handlerWrapper(web.Page("sha3.js"), nullAuth{}, true, false))

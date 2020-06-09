@@ -1,4 +1,4 @@
-package main
+package config
 
 import (
 	"github.com/fsnotify/fsnotify"
@@ -7,6 +7,7 @@ import (
 	"gopkg.in/natefinch/lumberjack.v2"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 )
 
@@ -17,10 +18,19 @@ func init() {
 	viper.SetDefault("maxTemp", 85)
 	viper.SetDefault("apiPort", 443)
 	viper.SetDefault("templateDir", "/usr/share/thermostat")
+	viper.SetDefault("db.migrations", "/usr/share/thermostat")
 
 	viper.SetConfigName("thermostat")
 	viper.AddConfigPath("/etc")
-	viper.AddConfigPath(".")
+
+	dir, err := os.Getwd()
+	if err != nil {
+		panic(err)
+	}
+	for len(dir) > 0 {
+		viper.AddConfigPath(dir)
+		dir = dir[:strings.LastIndexByte(dir, '/')]
+	}
 
 	if err := viper.ReadInConfig(); err != nil {
 		panic(err)
@@ -71,3 +81,5 @@ func init() {
 		logrus.SetLevel(logrus.DebugLevel)
 	}
 }
+
+func Ready() {}

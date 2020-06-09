@@ -11,16 +11,16 @@ import (
 
 func Page(name string) func(ctx context.Context, msg json.RawMessage) request.ApiResponse {
 	tmplDir := viper.GetString("templateDir")
-	data, err := ioutil.ReadFile(tmplDir+"/"+name)
+	data, err := ioutil.ReadFile(tmplDir + "/" + name)
 	if err != nil {
-		panic("failed to load file "+tmplDir+"/"+name)
+		panic("failed to load file " + tmplDir + "/" + name)
 	}
 	fileData := string(data)
 
 	return func(ctx context.Context, msg json.RawMessage) request.ApiResponse {
 		return request.ApiResponse{
 			Code: http.StatusOK,
-			Msg: fileData,
+			Msg:  fileData,
 		}
 	}
 }

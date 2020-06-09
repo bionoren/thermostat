@@ -21,9 +21,9 @@ type hvac struct {
 	last  time.Time
 	mutex sync.Mutex
 
-	fanPin gpio.PinIO
+	fanPin  gpio.PinIO
 	heatPin gpio.PinIO
-	acPin gpio.PinIO
+	acPin   gpio.PinIO
 }
 
 // NewHVAC returns a new HVAC controller using the given fan, ac, and heat GPIO pins
@@ -36,7 +36,7 @@ func NewHVAC(fan, ac, heat int) *hvac {
 		logrus.WithField("pin", pin).Panic("Failed to find pin")
 	}
 	if err := cont.fanPin.Out(gpio.Low); err != nil {
-		log.Fatal(err)
+		logrus.WithField("pin", pin).Fatal(err)
 	}
 
 	pin = fmt.Sprintf("GPIO%d", ac)
@@ -45,7 +45,7 @@ func NewHVAC(fan, ac, heat int) *hvac {
 		logrus.WithField("pin", pin).Panic("Failed to find pin")
 	}
 	if err := cont.acPin.Out(gpio.Low); err != nil {
-		log.Fatal(err)
+		logrus.WithField("pin", pin).Fatal(err)
 	}
 
 	pin = fmt.Sprintf("GPIO%d", heat)
@@ -54,7 +54,7 @@ func NewHVAC(fan, ac, heat int) *hvac {
 		logrus.WithField("pin", pin).Panic("Failed to find pin")
 	}
 	if err := cont.heatPin.Out(gpio.Low); err != nil {
-		log.Fatal(err)
+		logrus.WithField("pin", pin).Fatal(err)
 	}
 
 	return cont

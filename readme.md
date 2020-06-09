@@ -1,3 +1,29 @@
+Business Requirements:
+zones - "where"
+schedules - "when"
+modes - "what" - min, max, and correction/offset
+
+All the complexity is in the schedules.
+
+Schedules have a priority
+* default - default mode, all the time
+* scheduled - what we normally do
+* override - holidays, vacation, etc
+* custom - right now, I want it to be warmer/colder or a different mode
+
+Custom warmer/colder should use +-1 degree offset
+
+Schedules have
+* start day
+* end day
+* start time of day
+* end time of day
+* days of week
+
+Schedules with the same priority must not overlap
+
+---------------------------------
+
 Config:
 * minTemp (int): default 60
 * maxtemp (int): default 85
@@ -10,6 +36,7 @@ Config:
 * acPin (int): GPIO pin for the AC compressor
 * heatPin (int): GPIO pin for the heater
 * db.file (string): path to the database file
+* db.migrations (string): path to the database migrations
 * log.type (string): stderr or file
 * log.level (string): panic, error, warn, info, or debug
 * log.file (string): filename (if log type is file)

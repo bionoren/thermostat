@@ -1,12 +1,15 @@
-package system
+package api
 
 import (
 	"context"
+	"github.com/spf13/viper"
 	"thermostat/db"
 )
 
 func init() {
 	ctx := context.Background()
+	viper.SetDefault("db.file", "/tmp/thermostat-api.db")
+
 	if _, err := db.DB.ExecContext(ctx, "delete from setting"); err != nil {
 		panic(err)
 	}

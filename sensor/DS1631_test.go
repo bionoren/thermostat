@@ -1,4 +1,4 @@
-package system
+package sensor
 
 import (
 	"github.com/stretchr/testify/assert"
@@ -9,9 +9,9 @@ func TestDS1631_celciusFromRaw(t *testing.T) {
 	t.Parallel()
 
 	sensor := DS1631{}
-	tests := []struct{
-		name string
-		input []byte
+	tests := []struct {
+		name    string
+		input   []byte
 		celcius float64
 	}{
 		{"40C from datasheet", []byte{0x28, 0x00}, 40},

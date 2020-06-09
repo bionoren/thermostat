@@ -1,19 +1,21 @@
 package db
 
 import (
+	"context"
 	"github.com/spf13/viper"
-	"os"
 )
 
 func init() {
-	viper.Set("db.file", "/tmp/thermostat.db")
+	ctx := context.Background()
+	viper.SetDefault("db.file", "/tmp/thermostat-db.db")
 
-	_ = os.Remove(viper.GetString("db.file"))
-
-	if err := Connect(); err != nil {
+	if _, err := DB.ExecContext(ctx, "delete from setting"); err != nil {
 		panic(err)
 	}
-	if err := Migrate(); err != nil {
+	if _, err := DB.ExecContext(ctx, "delete from mode"); err != nil {
+		panic(err)
+	}
+	if _, err := DB.ExecContext(ctx, "delete from zone"); err != nil {
 		panic(err)
 	}
 }

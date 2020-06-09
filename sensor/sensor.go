@@ -1,4 +1,4 @@
-package system
+package sensor
 
 import (
 	"github.com/sirupsen/logrus"

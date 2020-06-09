@@ -6,8 +6,8 @@ import (
 	"thermostat/api/request"
 )
 
-type nullAuth struct {}
+type nullAuth struct{}
 
-func (auth nullAuth) authorize(url *url.URL, body []byte) (json.RawMessage, request.ApiResponse) {
+func (auth nullAuth) authorize(_ *url.URL, body []byte) (json.RawMessage, request.ApiResponse) {
 	return body, request.ApiResponse{}
 }

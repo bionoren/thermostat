@@ -1,4 +1,4 @@
-package system
+package sensor
 
 import (
 	"encoding/hex"
@@ -9,17 +9,16 @@ import (
 	"time"
 )
 
-
 type HIH6020 struct {
 	conn conn.Conn
 	addr uint16
 
-	conversionTime time.Duration
+	conversionTime  time.Duration
 	tempCalibration float64
-	humCalibration float64
-	temp float64
-	hum float64
-	lastUpdate time.Time
+	humCalibration  float64
+	temp            float64
+	hum             float64
+	lastUpdate      time.Time
 }
 
 func NewHIH6020(addr uint16, tempCalibration, humCalibration float64) *HIH6020 {
@@ -37,11 +36,11 @@ func NewHIH6020(addr uint16, tempCalibration, humCalibration float64) *HIH6020 {
 
 	return &HIH6020{
 		// This is now a point-to-point connection and implements conn.Conn:
-		conn:       &dev,
-		addr:       addr,
-		conversionTime: 41 * time.Millisecond, // The measurement cycle duration is typically 36.65 ms for temperature and humidity readings.
+		conn:            &dev,
+		addr:            addr,
+		conversionTime:  41 * time.Millisecond, // The measurement cycle duration is typically 36.65 ms for temperature and humidity readings.
 		tempCalibration: tempCalibration,
-		humCalibration: humCalibration,
+		humCalibration:  humCalibration,
 	}
 }
 
@@ -105,11 +104,11 @@ func (s *HIH6020) update() {
 func (s HIH6020) celciusFromRaw(data []byte) float64 {
 	num := (uint64(data[0]) << 6) | (uint64(data[1]) >> 2)
 	const denom float64 = 16382 // math.Exp2(14) - 2
-	return float64(num) / denom * 165 - 40
+	return float64(num)/denom*165 - 40
 }
 
 func (s HIH6020) humidityFromRaw(data []byte) float64 {
-	num := (uint64(data[0] & 0x3F) << 2) | uint64(data[1])
+	num := (uint64(data[0]&0x3F) << 2) | uint64(data[1])
 	const denom float64 = 16382 // math.Exp2(14) - 2
 	return float64(num) / denom * 100
 }

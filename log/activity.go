@@ -2,21 +2,26 @@ package log
 
 import (
 	"encoding/csv"
+	"github.com/spf13/viper"
 	"os"
 	"strconv"
+	"thermostat/config"
 	"time"
 )
 
 var logger *csv.Writer
 
-func Setup(file string) error {
-	f, err := os.OpenFile(file, os.O_CREATE | os.O_APPEND | os.O_WRONLY, 660)
-	if err != nil {
-		return err
-	}
-	logger = csv.NewWriter(f)
+func init() {
+	config.Ready()
 
-	return nil
+	if viper.IsSet("log.report") {
+		file := viper.GetString("log.report")
+		f, err := os.OpenFile(file, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 660)
+		if err != nil {
+			panic(err)
+		}
+		logger = csv.NewWriter(f)
+	}
 }
 
 func Log(fan, ac, heat bool, temp, hum float64) {

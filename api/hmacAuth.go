@@ -42,14 +42,14 @@ func (h hmacAuth) authorize(url *url.URL, body []byte) (json.RawMessage, request
 	if err := json.Unmarshal(body, &data); err != nil {
 		return nil, request.ApiResponse{
 			Code: http.StatusBadRequest,
-			Msg: err.Error(),
+			Msg:  err.Error(),
 		}
 	}
 
 	if delta := time.Now().UTC().Unix() - data.Time; delta > MAXDRIFT || delta < -MAXDRIFT {
 		return nil, request.ApiResponse{
 			Code: http.StatusBadRequest,
-			Msg: "invalid timestamp",
+			Msg:  "invalid timestamp",
 		}
 	}
 
@@ -57,7 +57,7 @@ func (h hmacAuth) authorize(url *url.URL, body []byte) (json.RawMessage, request
 	if err != nil {
 		return nil, request.ApiResponse{
 			Code: http.StatusUnauthorized,
-			Msg: "invalid signature encoding",
+			Msg:  "invalid signature encoding",
 		}
 	}
 
@@ -73,7 +73,7 @@ func (h hmacAuth) authorize(url *url.URL, body []byte) (json.RawMessage, request
 	if !hmac.Equal(sig, check) {
 		return nil, request.ApiResponse{
 			Code: http.StatusUnauthorized,
-			Msg: "denied",
+			Msg:  "denied",
 		}
 	}
 
