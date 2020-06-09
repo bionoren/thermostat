@@ -58,6 +58,7 @@ func (s constantSensor) Humidity() float64 {
 var _ system.Sensor = constantSensor(0)
 
 func TestEditHandler(t *testing.T) {
+	t.Parallel()
 	ctx := context.TODO()
 
 	for {
@@ -159,7 +160,7 @@ func TestEditHandler(t *testing.T) {
 				assert.Equal(t, tt.mode, custom.ModeID)
 			} else {
 				require.NotZero(t, custom.ModeID)
-				m:= custom.Mode(ctx)
+				m := custom.Mode(ctx)
 				assert.NotZero(t, m.ID)
 				assert.NotEqual(t, defaultMode.ID, m.ID)
 				assert.Equal(t, defaultMode.MinTemp+tt.delta, m.MinTemp)

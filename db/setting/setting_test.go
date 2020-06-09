@@ -169,106 +169,106 @@ func TestOverlaps(t *testing.T) {
 	require.NoError(t, err)
 	m3, err := mode.New(ctx, z2.ID, t.Name()+"1", 70, 80, 1)
 	require.NoError(t, err)
-	existing, err := New(ctx, z1.ID, m1.ID, SCHEDULED, WeekdayMask(time.Monday) | WeekdayMask(time.Wednesday), now, now.Add(time.Hour*24*30), 32400, 61200) // 9 to 5 monday and wednesday for the next 30 days
+	existing, err := New(ctx, z1.ID, m1.ID, SCHEDULED, WeekdayMask(time.Monday)|WeekdayMask(time.Wednesday), now, now.Add(time.Hour*24*30), 32400, 61200) // 9 to 5 monday and wednesday for the next 30 days
 	require.NoError(t, err)
 
-	tests := []struct{
-		name string
-		zone zone.Zone
-		priority Priority
-		weekdays []time.Weekday
-		start time.Time
-		end time.Time
+	tests := []struct {
+		name      string
+		zone      zone.Zone
+		priority  Priority
+		weekdays  []time.Weekday
+		start     time.Time
+		end       time.Time
 		startTime int
-		endTime int
-		overlap bool
+		endTime   int
+		overlap   bool
 	}{
 		{
-			name: "different zone",
-			zone: z2,
+			name:    "different zone",
+			zone:    z2,
 			overlap: false,
 		},
 		{
-			name: "different priority",
+			name:     "different priority",
 			priority: OVERRIDE,
+			overlap:  false,
+		},
+		{
+			name:    "span is before",
+			start:   existing.StartDay.Add(-time.Hour * 24),
+			end:     existing.StartDay.Add(-time.Second),
 			overlap: false,
 		},
 		{
-			name: "span is before",
-			start: existing.StartDay.Add(-time.Hour*24),
-			end: existing.StartDay.Add(-time.Second),
+			name:    "span is after",
+			start:   existing.EndDay.Add(time.Second),
+			end:     existing.EndDay.Add(time.Hour * 24),
 			overlap: false,
 		},
 		{
-			name: "span is after",
-			start: existing.EndDay.Add(time.Second),
-			end: existing.EndDay.Add(time.Hour*24),
-			overlap: false,
-		},
-		{
-			name: "different weekday",
+			name:     "different weekday",
 			weekdays: []time.Weekday{time.Sunday, time.Tuesday, time.Thursday, time.Friday, time.Saturday},
-			overlap: false,
+			overlap:  false,
 		},
 		{
-			name: "before",
+			name:      "before",
 			startTime: 0,
-			endTime: existing.StartTime-1,
-			overlap: false,
+			endTime:   existing.StartTime - 1,
+			overlap:   false,
 		},
 		{
-			name: "after",
-			startTime: existing.EndTime+1,
-			endTime: 86400,
-			overlap: false,
+			name:      "after",
+			startTime: existing.EndTime + 1,
+			endTime:   86400,
+			overlap:   false,
 		},
 		{
-			name: "overlaps start time",
+			name:      "overlaps start time",
 			startTime: 0,
-			endTime: existing.StartTime,
+			endTime:   existing.StartTime,
+			overlap:   true,
+		},
+		{
+			name:      "overlaps end time",
+			startTime: existing.EndTime,
+			endTime:   86400,
+			overlap:   true,
+		},
+		{
+			name:    "overlaps start span",
+			start:   existing.StartDay.Add(-time.Hour * 24),
+			end:     existing.StartDay,
 			overlap: true,
 		},
 		{
-			name: "overlaps end time",
-			startTime:  existing.EndTime,
-			endTime: 86400,
+			name:    "overlaps end span",
+			start:   existing.EndDay,
+			end:     existing.EndDay.Add(time.Hour * 24),
 			overlap: true,
 		},
 		{
-			name: "overlaps start span",
-			start: existing.StartDay.Add(-time.Hour*24),
-			end: existing.StartDay,
+			name:    "covers span",
+			start:   existing.StartDay.Add(-time.Second),
+			end:     existing.EndDay.Add(time.Second),
 			overlap: true,
 		},
 		{
-			name: "overlaps end span",
-			start: existing.EndDay,
-			end: existing.EndDay.Add(time.Hour*24),
+			name:    "inside span",
+			start:   existing.StartDay.Add(time.Second),
+			end:     existing.EndDay.Add(-time.Second),
 			overlap: true,
 		},
 		{
-			name: "covers span",
-			start: existing.StartDay.Add(-time.Second),
-			end: existing.EndDay.Add(time.Second),
-			overlap: true,
+			name:      "covers time",
+			startTime: existing.StartTime - 1,
+			endTime:   existing.EndTime + 1,
+			overlap:   true,
 		},
 		{
-			name: "inside span",
-			start: existing.StartDay.Add(time.Second),
-			end: existing.EndDay.Add(-time.Second),
-			overlap: true,
-		},
-		{
-			name: "covers time",
-			startTime: existing.StartTime-1,
-			endTime: existing.EndTime+1,
-			overlap: true,
-		},
-		{
-			name: "inside time",
-			startTime: existing.StartTime+1,
-			endTime: existing.EndTime-1,
-			overlap: true,
+			name:      "inside time",
+			startTime: existing.StartTime + 1,
+			endTime:   existing.EndTime - 1,
+			overlap:   true,
 		},
 	}
 
@@ -284,14 +284,14 @@ func TestOverlaps(t *testing.T) {
 				m = m2
 			}
 			sched := Setting{
-				ZoneID: z1.ID,
-				ModeID: m.ID,
-				Priority: existing.Priority,
+				ZoneID:    z1.ID,
+				ModeID:    m.ID,
+				Priority:  existing.Priority,
 				DayOfWeek: existing.DayOfWeek,
-				StartDay: existing.StartDay,
-				EndDay: existing.EndDay,
+				StartDay:  existing.StartDay,
+				EndDay:    existing.EndDay,
 				StartTime: existing.StartTime,
-				EndTime: existing.EndTime,
+				EndTime:   existing.EndTime,
 			}
 
 			if tt.zone.ID != 0 {
@@ -336,57 +336,57 @@ func TestValidate(t *testing.T) {
 	require.NoError(t, err)
 	m2, err := mode.New(ctx, z1.ID, t.Name()+"2", 71, 79, 2)
 	require.NoError(t, err)
-	existing, err := New(ctx, z1.ID, m1.ID, SCHEDULED, WeekdayMask(time.Monday) | WeekdayMask(time.Wednesday), now, now.Add(time.Hour*24*30), 32400, 61200) // 9 to 5 monday and wednesday for the next 30 days
+	existing, err := New(ctx, z1.ID, m1.ID, SCHEDULED, WeekdayMask(time.Monday)|WeekdayMask(time.Wednesday), now, now.Add(time.Hour*24*30), 32400, 61200) // 9 to 5 monday and wednesday for the next 30 days
 	require.NoError(t, err)
 
-	tests := []struct{
-		name string
-		weekdays []time.Weekday
-		start time.Time
-		end time.Time
+	tests := []struct {
+		name      string
+		weekdays  []time.Weekday
+		start     time.Time
+		end       time.Time
 		startTime int
-		endTime int
-		err string
+		endTime   int
+		err       string
 	}{
 		{
-			name: "valid",
+			name:     "valid",
 			weekdays: []time.Weekday{time.Tuesday},
 		},
 		{
-			name: "backward span",
+			name:     "backward span",
 			weekdays: []time.Weekday{time.Tuesday},
-			start: existing.EndDay,
-			end: existing.StartDay,
-			err: "setting start must be before setting end",
+			start:    existing.EndDay,
+			end:      existing.StartDay,
+			err:      "setting start must be before setting end",
 		},
 		{
-			name: "backward time",
-			weekdays: []time.Weekday{time.Tuesday},
+			name:      "backward time",
+			weekdays:  []time.Weekday{time.Tuesday},
 			startTime: existing.EndTime,
-			endTime: existing.StartTime,
-			err: "setting end time must be after start time",
+			endTime:   existing.StartTime,
+			err:       "setting end time must be after start time",
 		},
 		{
 			name: "no days",
-			err: "setting must be active on at least one day of the week",
+			err:  "setting must be active on at least one day of the week",
 		},
 		{
-			name: "overlapping",
+			name:     "overlapping",
 			weekdays: []time.Weekday{time.Monday},
-			err: fmt.Sprintf("new setting overlaps with setting %d", existing.ID),
+			err:      fmt.Sprintf("new setting overlaps with setting %d", existing.ID),
 		},
 	}
 
 	for i, tt := range tests {
 		t.Run(fmt.Sprintf("%d: %s", i, tt.name), func(t *testing.T) {
 			sched := Setting{
-				ZoneID: z1.ID,
-				ModeID: m2.ID,
-				Priority: existing.Priority,
-				StartDay: existing.StartDay,
-				EndDay: existing.EndDay,
+				ZoneID:    z1.ID,
+				ModeID:    m2.ID,
+				Priority:  existing.Priority,
+				StartDay:  existing.StartDay,
+				EndDay:    existing.EndDay,
 				StartTime: existing.StartTime,
-				EndTime: existing.EndTime,
+				EndTime:   existing.EndTime,
 			}
 
 			for _, d := range tt.weekdays {

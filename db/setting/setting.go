@@ -81,7 +81,7 @@ func Overlaps(a, b Setting) bool {
 	if a.EndDay.Before(b.StartDay) || a.StartDay.After(b.EndDay) {
 		return false
 	}
-	if a.DayOfWeek & b.DayOfWeek == 0 {
+	if a.DayOfWeek&b.DayOfWeek == 0 {
 		return false
 	}
 	if a.EndTime < b.StartTime || a.StartTime > b.EndTime {
@@ -126,7 +126,7 @@ func allPriority(ctx context.Context, zoneID int64, priority Priority) ([]Settin
 	settings := make([]Setting, 0, 16)
 	for rows.Next() {
 		s := Setting{
-			ZoneID: zoneID,
+			ZoneID:   zoneID,
 			Priority: priority,
 		}
 		if err := rows.Scan(&s.ID, &s.ModeID, &s.DayOfWeek, &s.StartDay, &s.EndDay, &s.StartTime, &s.EndTime); err != nil {
@@ -165,14 +165,14 @@ func Validate(ctx context.Context, setting Setting) error {
 
 func New(ctx context.Context, zoneID, modeID int64, priority Priority, dayOfWeek int, startDay, endDay time.Time, startTime, endTime int) (Setting, error) {
 	s := Setting{
-		ZoneID: zoneID,
-		ModeID: modeID,
-		Priority: priority,
+		ZoneID:    zoneID,
+		ModeID:    modeID,
+		Priority:  priority,
 		DayOfWeek: dayOfWeek,
-		StartDay: startDay,
-		EndDay: endDay,
+		StartDay:  startDay,
+		EndDay:    endDay,
 		StartTime: startTime,
-		EndTime: endTime,
+		EndTime:   endTime,
 	}
 	if err := Validate(ctx, s); err != nil {
 		return Setting{}, err

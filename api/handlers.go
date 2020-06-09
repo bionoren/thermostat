@@ -57,7 +57,7 @@ func status(ctx context.Context, msg json.RawMessage) request.ApiResponse {
 	}
 
 	config := z.Setting()
-	m:= config.Mode(ctx)
+	m := config.Mode(ctx)
 	sens := z.Sensor()
 	sys := z.Controller()
 
@@ -323,8 +323,8 @@ func editHandler(ctx context.Context, msg json.RawMessage) request.ApiResponse {
 				break
 			}
 		}
-		custom.MinTemp = currentMode.MinTemp+data.Delta
-		custom.MaxTemp = currentMode.MaxTemp+data.Delta
+		custom.MinTemp = currentMode.MinTemp + data.Delta
+		custom.MaxTemp = currentMode.MaxTemp + data.Delta
 		custom.Correction = 1
 		if err := custom.Update(ctx); err != nil {
 			return request.NewResponse(http.StatusInternalServerError, err.Error())

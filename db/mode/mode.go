@@ -85,10 +85,10 @@ func All(ctx context.Context, zone int64) ([]Mode, error) {
 
 func New(ctx context.Context, zoneID int64, name string, minTemp, maxTemp, correction float64) (Mode, error) {
 	m := Mode{
-		ZoneID: zoneID,
-		Name: name,
-		MinTemp: minTemp,
-		MaxTemp: maxTemp,
+		ZoneID:     zoneID,
+		Name:       name,
+		MinTemp:    minTemp,
+		MaxTemp:    maxTemp,
 		Correction: correction,
 	}
 
