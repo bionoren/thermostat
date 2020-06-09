@@ -57,11 +57,20 @@ func (z *Zone) monitor(ctx context.Context) {
 	defer func() {
 		if r := recover(); r != nil {
 			logrus.WithField("recovered", r).WithField("zone", z.zoneID).Error("monitoring panicked")
+			z.controller.SetAC(false)
+			z.controller.SetHeat(false)
+			z.controller.SetFan(false)
 		}
 	}()
 
 	interval := 30 * time.Second
-	schedules := <-z.update
+	schedules, err := setting.All(ctx, z.ID())
+	if err != nil {
+		logrus.WithField("zoneID", z.ID()).WithError(err).Panic("unable to load settings to initialize zone monitoring")
+	}
+	if len(schedules) == 0 { // tests may delete all existing schedules. In that case, we need to wait for schedules to be provided
+		schedules = <-z.update
+	}
 
 	tick := time.NewTicker(interval)
 

@@ -346,7 +346,7 @@ func editHandler(ctx context.Context, msg json.RawMessage) request.ApiResponse {
 	if next.IsZero() {
 		next = now.Add(time.Hour * 12)
 	}
-	if s, err := setting.New(ctx, z.ID(), custom.ID, setting.CUSTOM, current.DayOfWeek, now, next, 0, 86400); err != nil {
+	if s, err := setting.New(ctx, z.ID(), custom.ID, setting.CUSTOM, current.DayOfWeek, now.Add(-time.Second), next, 0, 86400); err != nil {
 		return request.NewResponse(http.StatusInternalServerError, err.Error())
 	} else {
 		settings = append(settings, s)

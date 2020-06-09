@@ -105,9 +105,6 @@ func TestEditHandler(t *testing.T) {
 	}
 
 	for i, tt := range tests {
-		if i != 1 {
-			continue
-		}
 		t.Run(fmt.Sprintf("%d: %s", i, tt.name), func(t *testing.T) {
 			settings, err := setting.All(ctx, systemZone.ID())
 			require.NoError(t, err)
@@ -121,12 +118,12 @@ func TestEditHandler(t *testing.T) {
 			systemZone.Update([]setting.Setting{defaultSetting})
 
 			for i := 1; i <= 5; i++ {
-				if systemZone.Setting().ModeID != 0 {
+				if systemZone.Setting().ModeID == defaultSetting.ID {
 					break
 				}
 				time.Sleep(time.Millisecond * time.Duration(5*i))
 			}
-			require.NotZero(t, systemZone.Setting().ModeID)
+			require.Equal(t, defaultSetting.ID, systemZone.Setting().ModeID)
 
 			data := struct {
 				ZoneID int64
@@ -166,6 +163,27 @@ func TestEditHandler(t *testing.T) {
 				assert.Equal(t, defaultMode.MinTemp+tt.delta, m.MinTemp)
 				assert.Equal(t, defaultMode.MaxTemp+tt.delta, m.MaxTemp)
 				assert.Equal(t, float64(1), m.Correction)
+			}
+
+			done := make(chan struct{})
+			go func() {
+				ticker := time.NewTicker(50 * time.Millisecond)
+				for {
+					<-ticker.C
+					if custom.ID == systemZone.Setting().ID {
+						ticker.Stop()
+						done <- struct{}{}
+						close(done)
+						break
+					}
+				}
+			}()
+
+			timer := time.NewTimer(time.Second)
+			defer timer.Stop()
+			select {
+			case <-done:
+			case <-timer.C:
 			}
 
 			assert.Equal(t, custom.ID, systemZone.Setting().ID)
