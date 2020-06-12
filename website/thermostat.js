@@ -55,12 +55,12 @@ async function refresh() {
         $("#mainList")[0].appendChild(tableCell(zone.name, "", "", function () {
             zoneID = zone.ID
             currentData = new Promise(function refresh(resolve, reject) {
-                              request("/v1/status", {zoneID: zoneID}).done(function(data) {
-                                  resolve(JSON.parse(data));
-                              }).fail(function(data) {
-                                  reject(data.responseText);
-                              })
-                          });
+                request("/v1/status", {zoneID: zoneID}).done(function(data) {
+                    resolve(JSON.parse(data));
+                }).fail(function(data) {
+                    reject(data.responseText);
+                })
+            });
             modes = refreshModes()
             schedules = refreshSchedules()
             loadPage("zone.html")
@@ -93,7 +93,7 @@ async function refreshZonePage() {
 
 function loadPage(page, args) {
     request("/v1/"+page, "").done(function(data) {
-        $("body")[0].innerHTML = data;
+        $("#mainContainer")[0].innerHTML = data;
 
         switch(page) {
             case "main.html":
@@ -166,7 +166,7 @@ function secondsToTime(seconds) {
 
 function maskToWeekdays(mask) {
     let weekdays = "";
-    if(mask & 2) {
+    if(mask & 2 << 0) {
         weekdays += "<span class='selectedDay'>S</span>";
     } else {
         weekdays += "<span class='unselectedDay'>S</span>";
@@ -219,34 +219,9 @@ async function refreshSchedulesPage() {
 }
 
 async function addSchedule() {
-    flatpickr("#startTime", {
-        enableTime: true,
-        noCalendar: true,
-        altInput: true,
-        altFormat: "h:i K",
-        dateFormat: "H:i"
-    });
-    flatpickr("#endTime", {
-        enableTime: true,
-        noCalendar: true,
-        altInput: true,
-        altFormat: "h:i K",
-        dateFormat: "H:i"
-    });
-    flatpickr("#startDate", {
-        defaultDate: "today",
-        enableTime: true,
-        altInput: true,
-        altFormat: "Y-m-d H:i",
-        dateFormat: "Z"
-    });
-    flatpickr("#endDate", {
-        defaultDate: "today",
-        enableTime: true,
-        altInput: true,
-        altFormat: "Y-m-d H:i",
-        dateFormat: "Z"
-    });
+    let now = dateSelect(new Date())
+    $("#startDate")[0].value = now
+    $("#endDate")[0].value = now
 
     let m = await modes;
     $("#modeSelect").empty();
@@ -266,13 +241,20 @@ async function addSchedule() {
 function weekdaysToMask(weekdays) {
     let mask = 0;
     weekdays.forEach(function (value, i) {
-       mask = mask | (value << i);
+        mask = mask | (value << (i+1));
     });
     return mask;
 }
 
+function dateSelect(date) {
+    let tzoffset = date.getTimezoneOffset() * 60000; //offset in milliseconds
+    let localISOTime = (new Date(date - tzoffset)).toISOString().slice(0,-1);
+
+    return localISOTime.slice(0,16);
+}
+
 function secondsFromTime(time) {
-    let parts = time.split(" ");
+    let parts = time.split(":");
     return parts[0]*60*60 + parts[1]*60;
 }
 
@@ -286,7 +268,7 @@ function addScheduleForm() {
     let checkboxes = $(".dayBox");
     for(let i = 0; i < checkboxes.length; i++) {
         let val = 0;
-        if(checkboxes[i].value == "on") {
+        if(checkboxes[i].checked) {
             val = 1;
         }
         weekdays.push(val);
@@ -294,14 +276,18 @@ function addScheduleForm() {
 
     let req = {
         ZoneID: zoneID,
-        ModeID: parseInt(data.modeID),
-        Priority: data.priority,
+        ModeID: parseInt(data.modeSelect),
+        Priority: parseInt(data.prioritySelect),
         DayOfWeek: weekdaysToMask(weekdays),
         StartTime: secondsFromTime(data.startTime),
-        EndTime: secondsFromTime(data.startTime),
-        StartDay: parseInt(data.startDate),
-        EndDay: parseInt(data.endDate),
+        EndTime: secondsFromTime(data.endTime),
+        StartDay: dateSelect(new Date(Date.parse(data.startDate)))+":00Z",
+        EndDay: dateSelect(new Date(Date.parse(data.endDate)))+":00Z",
     };
+    console.log(req)
+    console.log(data.startDate)
+    console.log(Date.parse(data.startDate))
+    console.log(new Date(Date.parse(data.startDate)))
 
     request("/v1/schedule/add", req).done(function(data) {
         schedules = refreshSchedules();
@@ -318,30 +304,35 @@ function roundTemp(num) {
 }
 
 function tableCell(titleText, subtitleText, detailText, onClick) {
-    let title = document.createElement("div");
-    title.className = "tablecellTitle";
-    title.innerHTML = titleText;
+    let container = document.createElement("div");
+    container.className = "container";
+    container.onclick = onClick;
+
+    let mainRow = document.createElement("div");
+    mainRow.className = "row";
+
+    let titleCol = document.createElement("titleCol");
+    titleCol.className = "col"
+    titleCol.innerHTML = titleText;
+
+    let rightCell = document.createElement("div");
+    rightCell.className = "col"
 
     let subtitle = document.createElement("div");
-    subtitle.className = "tablecellSubtitle";
+    subtitle.className = "row";
     subtitle.innerHTML = subtitleText;
 
     let detail = document.createElement("div");
-    detail.className = "tablecellDetail";
+    detail.className = "row";
     detail.innerHTML = detailText;
 
-    let rightDiv = document.createElement("div");
-    rightDiv.className = "tablecellRight";
-    rightDiv.appendChild(subtitle);
-    rightDiv.appendChild(detail);
+    container.appendChild(mainRow);
+    mainRow.appendChild(titleCol);
+    mainRow.appendChild(rightCell);
+    rightCell.appendChild(subtitle);
+    rightCell.appendChild(detail);
 
-    let cell = document.createElement("div");
-    cell.className = "tablecell";
-    cell.appendChild(title);
-    cell.appendChild(rightDiv);
-    cell.onclick = onClick;
-
-    return cell;
+    return container;
 }
 
 function addModeForm() {

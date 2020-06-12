@@ -35,8 +35,8 @@ func StartApi(cert, key []byte) {
 	mux.HandleFunc("/v1/mode/delete", handlerWrapper(deleteMode, auth, false, true))
 	mux.HandleFunc("/v1/edit", handlerWrapper(editHandler, auth, false, true))
 
-	mux.HandleFunc("/", handlerWrapper(web.Page("index.html"), nullAuth{}, true, false))
-	mux.HandleFunc("/sha3.js", handlerWrapper(web.Page("sha3.js"), nullAuth{}, true, false))
+	mux.HandleFunc("/", web.MimePage("index.html", "text/html; charset=utf-8"))
+	mux.HandleFunc("/sha3.js", web.MimePage("sha3.js", "application/javascript; charset=utf-8"))
 
 	mux.HandleFunc("/v1/main.html", handlerWrapper(web.Page("main.html"), auth, false, false))
 	mux.HandleFunc("/v1/zone.html", handlerWrapper(web.Page("zone.html"), auth, false, false))

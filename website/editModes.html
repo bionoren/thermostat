@@ -1,22 +1,46 @@
-<div id="topBar">
-    <div id="back">
-        <input type="button" class="button" onclick="loadPage('modes.html')" value="Back">
-    </div>
+<div class="navbar">
+    <input type="button" class="btn btn-primary btn-lg" onclick="loadPage('modes.html')" value="Back">
 </div>
 
-<div id="mainList">
-    <form id="editForm" method="post" onsubmit="return editModeForm()">
-        <input id="modeID" type="hidden" name="ID">
-        Name: <input id="name" type="text" name="name" maxlength="15" size="15">
-        <br>
-        minTemp: <input id="minTemp" type="number" name="minTemp" min="65" max="85" step="0.1" value="75">
-        <br>
-        maxTemp: <input id="maxTemp" type="number" name="maxTemp" min="65" max="85" step="0.1" value="75">
-        <br>
-        offset: <input id="offset" type="number" name="offset" min="0.5" max="5" step="0.1" value="1">
-        <br>
-        <input type="submit" name="submit" value="Edit" style="-webkit-appearance: button">
-    </form>
-    <br>
-    <div id="errors"></div>
-</div>
+<form id="editForm" method="post" onsubmit="return editModeForm()">
+    <input id="modeID" type="hidden" name="ID">
+    <div class="row">
+        <div class="col">
+            Name:
+        </div>
+        <div class="col">
+            <input id="name" class="form-control-lg" type="text" name="name" maxlength="15" size="15">
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+            minTemp:
+        </div>
+        <div class="col">
+            <input id="minTemp" class="form-control-lg" type="number" name="minTemp" min="65" max="85" step="0.1" value="75">
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+            maxTemp:
+        </div>
+        <div class="col">
+            <input id="maxTemp" class="form-control-lg" type="number" name="maxTemp" min="65" max="85" step="0.1" value="75">
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+            offset:
+        </div>
+        <div class="col">
+            <input id="offset" class="form-control-lg" type="number" name="offset" min="0.5" max="5" step="0.1" value="1">
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+            <input class="btn btn-lg btn-primary" type="submit" name="submit" value="Edit">
+        </div>
+    </div>
+</form>
+<br>
+<div id="errors"></div>

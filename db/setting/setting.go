@@ -139,6 +139,12 @@ func allPriority(ctx context.Context, zoneID int64, priority Priority) ([]Settin
 }
 
 func Validate(ctx context.Context, setting Setting) error {
+	if setting.ZoneID == 0 {
+		return errors.New("setting must be in a zone")
+	}
+	if setting.Priority == 0 {
+		return errors.New("setting must have a priority")
+	}
 	if !setting.StartDay.Before(setting.EndDay) {
 		return errors.New("setting start must be before setting end")
 	}

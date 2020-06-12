@@ -1,24 +1,40 @@
-<div id="topBar">
-    <div id="back">
-        <input type="button" class="button" onclick="loadPage('main.html')" value="Back">
+<div class="navbar">
+    <input type="button" class="btn btn-primary btn-lg" onclick="loadPage('main.html')" value="Back">
+</div>
+<div class="row no-gutters">
+    <div class="col currentTemp">
+        <span id="temp">??</span><span style="font-size: 50%; vertical-align: top;">℉</span>
+    </div>
+    <div class="col-auto text-right">
+        <div class="row">
+            <div class="col">
+                <svg id="tempUp" class="bi bi-caret-up-fill" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg" onclick="alert('temp up!')">
+                    <path d="M7.247 4.86l-4.796 5.481c-.566.647-.106 1.659.753 1.659h9.592a1 1 0 0 0 .753-1.659l-4.796-5.48a1 1 0 0 0-1.506 0z"/>
+                </svg>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col"> <!-- because it's rotated -->
+                <svg id="tempDown" class="bi bi-caret-down-fill" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg" onclick="alert('temp down!')">
+                    <path d="M7.247 11.14L2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z"/>
+                </svg>
+            </div>
+        </div>
     </div>
 </div>
-<div id="currentTemp">
-    <span id="temp">??</span><span style="font-size: 50%; vertical-align: top;">℉</span>
-    <div id="tempUp" onclick="alert('temp up!')">&#8679</div>
-    <div id="tempDown" onclick="alert('temp down!')">&#8679</div>
+<div id="currentMode" class="row">
+    <label for="modeSelect">Mode: </label><select id="modeSelect" class="form-control form-control-lg"><option value=""></option><option>Test option here</option></select>
 </div>
-<div id="currentMode">
-    <label for="modeSelect">Mode: </label><select id="modeSelect"><option value=""></option><option>Test option here</option></select>
-</div>
-<div id="zoneSchedule">
+<div id="zoneSchedule" class="row">
 </div>
 
-<div id="bottomBar">
-    <div id="modes">
-        <input type="button" class="button" onclick="loadPage('modes.html')" value="Modes">
-    </div>
-    <div id="schedules">
-        <input type="button" class="button" onclick="loadPage('schedules.html')" value="Schedules">
+<div id="bottomBar" class="fixed-bottom">
+    <div class="row my-4">
+        <div id="modes" class="col d-flex justify-content-center">
+            <input type="button" class="button" onclick="loadPage('modes.html')" value="Modes">
+        </div>
+        <div id="schedules" class="col d-flex justify-content-center">
+            <input type="button" class="button" onclick="loadPage('schedules.html')" value="Schedules">
+        </div>
     </div>
 </div>

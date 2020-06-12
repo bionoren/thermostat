@@ -140,42 +140,29 @@ func modes(ctx context.Context, msg json.RawMessage) request.ApiResponse {
 }
 
 func addSchedule(ctx context.Context, msg json.RawMessage) request.ApiResponse {
-	var data struct {
-		ZoneID    int64
-		ModeID    int64
-		Priority  setting.Priority
-		DayOfWeek int
-		Start     int64
-		End       int64
-		StartTime int
-		EndTime   int
-	}
+	var s setting.Setting
 
-	if err := json.Unmarshal(msg, &data); err != nil {
+	if err := json.Unmarshal(msg, &s); err != nil {
 		return request.NewResponse(http.StatusBadRequest, err.Error())
 	}
 
-	if data.Priority == setting.DEFAULT {
+	if s.Priority == setting.DEFAULT {
 		return request.NewResponse(http.StatusBadRequest, "you may not add a schedule with default priority")
 	}
-	if data.Priority == setting.CUSTOM {
+	if s.Priority == setting.CUSTOM {
 		return request.NewResponse(http.StatusBadRequest, "you may not add a schedule with custom priority")
 	}
 
-	z, err := system.GetZone(data.ZoneID)
+	z, err := system.GetZone(s.ZoneID)
 	if err != nil {
 		return request.NewResponse(http.StatusBadRequest, err.Error())
 	}
 
-	start := time.Unix(data.Start, 0)
-	end := time.Unix(data.End, 0)
-
-	settings, err := setting.All(ctx, z.ID())
-	if err != nil {
+	if s, err = setting.New(ctx, z.ID(), s.ModeID, s.Priority, s.DayOfWeek, s.StartDay, s.EndDay, s.StartTime, s.EndTime); err != nil {
 		return request.NewResponse(http.StatusInternalServerError, err.Error())
 	}
 
-	s, err := setting.New(ctx, z.ID(), data.ModeID, data.Priority, data.DayOfWeek, start, end, data.StartTime, data.EndTime)
+	settings, err := setting.All(ctx, z.ID())
 	if err != nil {
 		return request.NewResponse(http.StatusInternalServerError, err.Error())
 	}

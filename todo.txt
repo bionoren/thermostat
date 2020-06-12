@@ -8,9 +8,10 @@
 √ fix the hmac auth test
 √ schedules with the same priority must not overlap
 √ static DHCP
-finish addSchedules form
-temp up/down and custom mode dropdown support
-editSchedules form
+√ finish addSchedules form
+temp up/down support
+custom mode dropdown support
+editSchedules (delete) form
 web login page
 port forwarding
 rotate secret and certs

@@ -1,54 +1,69 @@
-<div id="topBar">
-    <div id="back">
-        <input type="button" class="button" onclick="loadPage('schedules.html')" value="Back">
-    </div>
+<div class="navbar">
+    <input type="button" class="btn btn-primary btn-lg" onclick="loadPage('schedules.html')" value="Back">
 </div>
 
-<div id="mainList">
-    <form id="addForm" method="post" onsubmit="return addScheduleForm()">
-        <label for="prioritySelect">Priority: </label><select id="prioritySelect" name="prioritySelect">
+<form id="addForm" method="post" onsubmit="return addScheduleForm()">
+    <div class="form-group">
+        <label for="prioritySelect">Priority: </label>
+        <select id="prioritySelect" name="prioritySelect">
             <option value=""></option>
             <option value="2">Scheduled</option>
             <option value="3">Custom</option>
         </select>
-        <br>
-        <label for="modeSelect">Mode: </label><select id="modeSelect" name="modeSelect"><option value=""></option><option>Test option here</option></select>
-        <br>
-        <table class="dayPicker">
-            <thead>
-            <tr>
-                <td>S</td>
-                <td>M</td>
-                <td>T</td>
-                <td>W</td>
-                <td>T</td>
-                <td>F</td>
-                <td>S</td>
-            </tr>
-            </thead>
-            <tbody>
-            <tr>
-                <td><input id="sunday" type="checkbox" name="dayOfWeek[]" class="dayBox"></td>
-                <td><input id="monday" type="checkbox" name="dayOfWeek[]" class="dayBox"></td>
-                <td><input id="tuesday" type="checkbox" name="dayOfWeek[]" class="dayBox"></td>
-                <td><input id="wednesday" type="checkbox" name="dayOfWeek[]" class="dayBox"></td>
-                <td><input id="thursday" type="checkbox" name="dayOfWeek[]" class="dayBox"></td>
-                <td><input id="friday" type="checkbox" name="dayOfWeek[]" class="dayBox"></td>
-                <td><input id="saturday" type="checkbox" name="dayOfWeek[]" class="dayBox"></td>
-            </tr>
-            </tbody>
-        </table>
-        start: <input id="startTime" name="startTime" type="text" placeholder="Select Time..">
-        <br>
-        stop: <input id="endTime" name="endTime" type="text" placeholder="Select Time..">
-        <br>
-        begin: <input id="startDate" name="startDate" type="text" placeholder="Select Date..">
-        <br>
-        end: <input id="endDate" name="endDate" type="text" placeholder="Select Date..">
-        <br>
-        <br>
-        <input type="submit" name="submit" value="Add" style="-webkit-appearance: button">
-    </form>
-    <br>
-    <div id="errors"></div>
-</div>
+    </div>
+    <div class="form-group">
+        <label for="modeSelect">Mode: </label>
+        <select id="modeSelect" name="modeSelect"><option value=""></option><option>Test option here</option></select>
+    </div>
+    <div class="row">
+        <div class="form-check form-check-inline">
+            <input id="sunday" type="checkbox" name="dayOfWeek[]" class="form-check-input dayBox">
+            <label class="form-check-label" for="sunday">S</label>
+        </div>
+        <div class="form-check form-check-inline">
+            <input id="monday" type="checkbox" name="dayOfWeek[]" class="form-check-input dayBox">
+            <label class="form-check-label" for="monday">M</label>
+        </div>
+        <div class="form-check form-check-inline">
+            <input id="tuesday" type="checkbox" name="dayOfWeek[]" class="form-check-input dayBox">
+            <label class="form-check-label" for="tuesday">T</label>
+        </div>
+        <div class="form-check form-check-inline">
+            <input id="wednesday" type="checkbox" name="dayOfWeek[]" class="form-check-input dayBox">
+            <label class="form-check-label" for="wednesday">W</label>
+        </div>
+        <div class="form-check form-check-inline">
+            <input id="thursday" type="checkbox" name="dayOfWeek[]" class="form-check-input dayBox">
+            <label class="form-check-label" for="thursday">T</label>
+        </div>
+        <div class="form-check form-check-inline">
+            <input id="friday" type="checkbox" name="dayOfWeek[]" class="form-check-input dayBox">
+            <label class="form-check-label" for="friday">F</label>
+        </div>
+        <div class="form-check form-check-inline">
+            <input id="saturday" type="checkbox" name="dayOfWeek[]" class="form-check-input dayBox">
+            <label class="form-check-label" for="saturday">S</label>
+        </div>
+    </div>
+    <div class="form-group">
+        <label for="startTime">startTime:</label>
+        <input id="startTime" name="startTime" type="time" placeholder="Select Time..">
+    </div>
+    <div class="form-group">
+        <label for="endTime">stopTime:</label>
+        <input id="endTime" name="endTime" type="time" placeholder="Select Time..">
+    </div>
+    <div class="form-group">
+        <label for="startDate">start:</label>
+        <input id="startDate" name="startDate" type="datetime-local" placeholder="Select Date..">
+    </div>
+    <div class="form-group">
+        <label for="endDate">end:</label>
+        <input id="endDate" name="endDate" type="datetime-local" placeholder="Select Date..">
+    </div>
+    <div class="row">
+        <input type="submit" name="submit" value="Add" class="btn btn-lg btn-primary">
+    </div>
+</form>
+<br>
+<div id="errors"></div>
