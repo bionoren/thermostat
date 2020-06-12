@@ -4,7 +4,14 @@ body {
     font-family: -apple-system, sans-serif;
 }
 
+h1 {
+    margin-block-start: 0.2em;
+    margin-block-end: 0.2em;
+}
+
 #currentTemp {
+    position: absolute;
+    top: 55pt;
     font-size: 80pt;
     width: 100%;
 }
@@ -26,6 +33,8 @@ body {
 }
 
 #currentMode {
+    position: absolute;
+    top: 150pt;
     padding-top: 10pt;
     font-size: 20pt;
 }
@@ -43,15 +52,15 @@ body {
 
 #bottomBar {
     position: absolute;
-    left: 0pt;
-    bottom: 0pt;
+    left: 0;
+    bottom: 0;
     height: 50pt;
     width: 100%;
 }
 
 #topBar {
     position: absolute;
-    left: 0pt;
+    left: 0;
     top: 10pt;
     height: 50pt;
     width: 100%;
@@ -89,14 +98,19 @@ body {
     width: 100%;
 }
 
+#zoneSchedule {
+    position: absolute;
+    top: 200pt;
+}
+
 .tablecell {
     height: 44pt;
     width: calc(100% - 10pt);
 }
 
 .tablecellTitle {
-    position: absolute;;
-    left: 0pt;
+    position: absolute;
+    left: 0;
     float:left;
     clear:none;
     font-size: 30pt;
@@ -104,8 +118,8 @@ body {
 
 .tablecellRight {
     float: right;
-    right: 0pt;
-    top: 0pt;
+    right: 0;
+    top: 0;
 }
 
 .tablecellSubtitle {

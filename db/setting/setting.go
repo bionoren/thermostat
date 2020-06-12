@@ -189,6 +189,9 @@ func New(ctx context.Context, zoneID, modeID int64, priority Priority, dayOfWeek
 }
 
 func (s Setting) Delete(ctx context.Context) error {
+	if s.Priority == DEFAULT {
+		return errors.New("cannot delete the default schedule")
+	}
 	_, err := db.DB.ExecContext(ctx, "delete from setting where id=?", s.ID)
 	return err
 }

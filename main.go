@@ -31,7 +31,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	sens := sensor.NewHIH6020(uint16(addr[0]), 0, 0)
+	sens := sensor.NewHIH6020(uint16(addr[0]), -10, 0)
 	zone, err := system.NewZone(ctx, "default", sys, sens)
 	if err != nil {
 		panic(err)
@@ -59,7 +59,7 @@ func selfTest() {
 	if err != nil {
 		panic(err)
 	}
-	sens := sensor.NewDS1631(uint16(addr[0]), -2)
+	sens := sensor.NewHIH6020(uint16(addr[0]), 0, 0)
 	logrus.WithField("temp", sens.Temperature()).Info("current temp")
 
 	h := system.NewHVAC(viper.GetInt("fanPin"), viper.GetInt("acPin"), viper.GetInt("heatPin"))

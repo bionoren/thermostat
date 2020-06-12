@@ -21,12 +21,6 @@ func (m Mode) Validate() error {
 	if len(m.Name) < 2 {
 		return errors.New("name must be at least 2 characters long")
 	}
-	if m.Name == "custom" {
-		return errors.New("\"custom\" is a reserved mode name")
-	}
-	if m.Name == "default" {
-		return errors.New("\"default\" is a reserved mode name")
-	}
 	if m.MaxTemp-m.MinTemp < 2 {
 		return errors.New("max temperature must be at least 2 degrees higher than the min temperature")
 	}

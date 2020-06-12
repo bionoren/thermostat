@@ -1,4 +1,4 @@
-GOBIN=. GOOS=linux GOARCH=arm GOARM=6 CGO_ENABLED=1 go build -ldflags="-s -w" thermostat
+#GOBIN=. GOOS=linux GOARCH=arm GOARM=6 CGO_ENABLED=1 go build -ldflags="-s -w" thermostat
 cp website/* /usr/share/thermostat/
 cp db/migrations/* /usr/share/thermostat/
 

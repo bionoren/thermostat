@@ -32,3 +32,4 @@ create table setting (
 insert into zone (name) values ('default');
 insert into mode (zoneID, name, minTemp, maxTemp, correction) select id, 'default', 60, 85, 1 from zone where name = 'default';
 insert into mode (zoneID, name, minTemp, maxTemp, correction) select id, 'custom', 60, 85, 1 from zone where name = 'default';
+insert into setting (zoneID, modeID, priority, dayOfWeek, startDay, endDay, startTime, endTime) select id, zoneID, 1, 254, datetime(0, 'unixepoch'), datetime(106751991167, 'unixepoch'), 0, 86400 from mode where name = 'default';

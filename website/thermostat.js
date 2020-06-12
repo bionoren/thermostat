@@ -1,7 +1,23 @@
-var modes = refreshModes();
+let zoneID = 0;
+let zones = refreshZones();
+function refreshZones() {
+    return new Promise(function (resolve, reject) {
+        request("/v1/zones", "").done(function (data) {
+            let zoneArray = JSON.parse(data);
+            let zones = new Map();
+            zoneArray.forEach(function (item) {
+                zones.set(item.ID, item)
+            });
+            resolve(zones);
+        }).fail(function (data) {
+            reject(data.responseText)
+        });
+    });
+}
+let modes;
 function refreshModes() {
     return new Promise(function (resolve, reject) {
-        request("/v1/mode", "").done(function (data) {
+        request("/v1/mode", {zoneID: zoneID}).done(function (data) {
             let modeArray = JSON.parse(data);
             let modes = new Map();
             modeArray.forEach(function (item) {
@@ -13,10 +29,10 @@ function refreshModes() {
         });
     });
 }
-var schedules = refreshSchedules();
+let schedules;
 function refreshSchedules() {
     return new Promise(function (resolve, reject) {
-        request("/v1/schedule", "").done(function (data) {
+        request("/v1/schedule", {zoneID: zoneID}).done(function (data) {
             let scheduleArray = JSON.parse(data);
             let schedules = new Map();
             scheduleArray.forEach(function (item, index) {
@@ -29,18 +45,31 @@ function refreshSchedules() {
     });
 }
 
-var lastData = null;
-var currentData = new Promise(function refresh(resolve, reject) {
-    request("/v1/status", "").done(function(data) {
-        resolve(JSON.parse(data));
-
-    }).fail(function(data) {
-        reject(data.responseText);
-    })
-});
+let lastData = null;
+let currentData = null
 
 async function refresh() {
-    data = lastData;
+    let z = await zones;
+    $("#mainList")[0].innerHTML = "";
+    z.forEach(function (zone) {
+        $("#mainList")[0].appendChild(tableCell(zone.name, "", "", function () {
+            zoneID = zone.ID
+            currentData = new Promise(function refresh(resolve, reject) {
+                              request("/v1/status", {zoneID: zoneID}).done(function(data) {
+                                  resolve(JSON.parse(data));
+                              }).fail(function(data) {
+                                  reject(data.responseText);
+                              })
+                          });
+            modes = refreshModes()
+            schedules = refreshSchedules()
+            loadPage("zone.html")
+        }));
+    });
+}
+
+async function refreshZonePage() {
+    let data = lastData;
     if(data == null) {
         lastData = await currentData;
         data = lastData;
@@ -59,7 +88,7 @@ async function refresh() {
         $("#modeSelect")[0].appendChild(opt);
     });
 
-    $("#schedule")[0].innerHTML = JSON.stringify(schedules, null, 2);
+    $("#zoneSchedule")[0].innerHTML = JSON.stringify(schedules, null, 2);
 }
 
 function loadPage(page, args) {
@@ -69,6 +98,9 @@ function loadPage(page, args) {
         switch(page) {
             case "main.html":
                 refresh();
+                break;
+            case "zone.html":
+                refreshZonePage();
                 break;
             case "modes.html":
                 refreshModesPage();
@@ -89,8 +121,8 @@ function loadPage(page, args) {
 }
 
 async function editMode(id) {
-    m = await modes;
-    v = m.get(id);
+    let m = await modes;
+    let v = m.get(id);
     $("#modeID")[0].value = v.ID;
     $("#name")[0].value = v.name;
     $("#minTemp")[0].value = v.minTemp;
@@ -111,13 +143,13 @@ async function refreshModesPage() {
 }
 
 function prettyDate(datestring) {
-    d = new Date(datestring);
+    let d = new Date(datestring);
     return d.toLocaleDateString("en-US")+" "+d.toTimeString().substr(0,5);
 }
 
 function secondsToTime(seconds) {
-    hours = seconds / 3600;
-    minutes = seconds % 3600;
+    let hours = seconds / 3600;
+    let minutes = seconds % 3600;
     if(hours == 0) {
         hours = "00";
     } else if(hours < 10) {
@@ -133,7 +165,7 @@ function secondsToTime(seconds) {
 }
 
 function maskToWeekdays(mask) {
-    weekdays = "";
+    let weekdays = "";
     if(mask & 2) {
         weekdays += "<span class='selectedDay'>S</span>";
     } else {
@@ -232,11 +264,16 @@ async function addSchedule() {
 }
 
 function weekdaysToMask(weekdays) {
-    var mask = 0;
+    let mask = 0;
     weekdays.forEach(function (value, i) {
        mask = mask | (value << i);
     });
     return mask;
+}
+
+function secondsFromTime(time) {
+    let parts = time.split(" ");
+    return parts[0]*60*60 + parts[1]*60;
 }
 
 function addScheduleForm() {
@@ -245,23 +282,33 @@ function addScheduleForm() {
         return obj;
     }, {});
 
+    let weekdays = [];
+    let checkboxes = $(".dayBox");
+    for(let i = 0; i < checkboxes.length; i++) {
+        let val = 0;
+        if(checkboxes[i].value == "on") {
+            val = 1;
+        }
+        weekdays.push(val);
+    }
+
     let req = {
+        ZoneID: zoneID,
         ModeID: parseInt(data.modeID),
         Priority: data.priority,
-        DayOfWeek: weekdaysToMask(data.dayOfWeek),
-        Start: parseInt(data.startTime),
-        End: parseInt(data.startTime),
-        StartTime: parseInt(data.startDate),
-        EndTime: parseInt(data.endDate),
+        DayOfWeek: weekdaysToMask(weekdays),
+        StartTime: secondsFromTime(data.startTime),
+        EndTime: secondsFromTime(data.startTime),
+        StartDay: parseInt(data.startDate),
+        EndDay: parseInt(data.endDate),
     };
 
-    console.log(JSON.stringify(req));
-    /*request("/v1/schedule/add", req).done(function(data) {
+    request("/v1/schedule/add", req).done(function(data) {
         schedules = refreshSchedules();
         loadPage("schedules.html");
     }).fail(function(data) {
         $("#errors")[0].innerHTML = data.responseText;
-    });*/
+    });
 
     return false;
 }
@@ -304,9 +351,10 @@ function addModeForm() {
     }, {});
 
     let req = {
+        ZoneID: zoneID,
         Name: data.name,
-        Min: parseFloat(data.minTemp),
-        Max: parseFloat(data.maxTemp),
+        MinTemp: parseFloat(data.minTemp),
+        MaxTemp: parseFloat(data.maxTemp),
         Correction: parseFloat(data.offset)
     };
 
@@ -327,10 +375,11 @@ function editModeForm() {
     }, {});
 
     let req = {
+        ZoneID: zoneID,
         ID: parseInt(data.ID),
         Name: data.name,
-        Min: parseFloat(data.minTemp),
-        Max: parseFloat(data.maxTemp),
+        MinTemp: parseFloat(data.minTemp),
+        MaxTemp: parseFloat(data.maxTemp),
         Correction: parseFloat(data.offset)
     };
 

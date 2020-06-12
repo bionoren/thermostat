@@ -32,14 +32,14 @@ func StartApi(cert, key []byte) {
 	mux.HandleFunc("/v1/mode", handlerWrapper(modes, auth, false, true))
 	mux.HandleFunc("/v1/mode/add", handlerWrapper(addMode, auth, false, true))
 	mux.HandleFunc("/v1/mode/edit", handlerWrapper(editMode, auth, false, true))
-	// TODO need to be able to validate that the mode isn't used by any schedules
-	// mux.HandleFunc("/v1/mode/delete", handlerWrapper(deleteMode(update), auth, false, true))
+	mux.HandleFunc("/v1/mode/delete", handlerWrapper(deleteMode, auth, false, true))
 	mux.HandleFunc("/v1/edit", handlerWrapper(editHandler, auth, false, true))
 
 	mux.HandleFunc("/", handlerWrapper(web.Page("index.html"), nullAuth{}, true, false))
 	mux.HandleFunc("/sha3.js", handlerWrapper(web.Page("sha3.js"), nullAuth{}, true, false))
 
 	mux.HandleFunc("/v1/main.html", handlerWrapper(web.Page("main.html"), auth, false, false))
+	mux.HandleFunc("/v1/zone.html", handlerWrapper(web.Page("zone.html"), auth, false, false))
 	mux.HandleFunc("/js.js", handlerWrapper(web.Page("thermostat.js"), auth, false, false))
 	mux.HandleFunc("/v1/thermostat.html", handlerWrapper(web.Page("thermostat.html"), auth, false, false))
 	mux.HandleFunc("/v1/thermostat.css", handlerWrapper(web.Page("thermostat.css"), auth, false, false))

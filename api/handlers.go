@@ -98,7 +98,14 @@ func schedules(ctx context.Context, msg json.RawMessage) request.ApiResponse {
 		return request.NewResponse(http.StatusInternalServerError, err.Error())
 	}
 
-	msg, err = json.Marshal(settings)
+	userSettings := settings[:0]
+	for _, s := range settings {
+		if s.Priority != setting.CUSTOM && s.Priority != setting.DEFAULT {
+			userSettings = append(userSettings, s)
+		}
+	}
+
+	msg, err = json.Marshal(userSettings)
 	if err != nil {
 		return request.NewResponse(http.StatusInternalServerError, err.Error())
 	}
@@ -146,6 +153,13 @@ func addSchedule(ctx context.Context, msg json.RawMessage) request.ApiResponse {
 
 	if err := json.Unmarshal(msg, &data); err != nil {
 		return request.NewResponse(http.StatusBadRequest, err.Error())
+	}
+
+	if data.Priority == setting.DEFAULT {
+		return request.NewResponse(http.StatusBadRequest, "you may not add a schedule with default priority")
+	}
+	if data.Priority == setting.CUSTOM {
+		return request.NewResponse(http.StatusBadRequest, "you may not add a schedule with custom priority")
 	}
 
 	z, err := system.GetZone(data.ZoneID)
