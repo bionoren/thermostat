@@ -114,6 +114,9 @@ function loadPage(page, args) {
             case "addSchedule.html":
                 addSchedule();
                 break;
+            case "editSchedule.html":
+                editSchedule(args);
+                break;
         }
     }).fail(function(data) {
         console.log("error: "+data.responseText)
@@ -210,7 +213,7 @@ async function refreshSchedulesPage() {
     let m = await modes;
     $("#mainList")[0].innerHTML = "";
     s.forEach(function (schedule) {
-        let subtitle = maskToWeekdays(schedule.dayOfWeek)+"<br>"+secondsToTime(schedule.startTime)+" - "+secondsToTime(schedule.endTime);
+        let subtitle = maskToWeekdays(schedule.dayOfWeek)+"<br>"+timeFromSeconds(schedule.startTime)+" - "+timeFromSeconds(schedule.endTime);
         let detail = "start: "+prettyDate(schedule.startDay)+"<br>end: "+prettyDate(schedule.endDay);
         $("#mainList")[0].appendChild(tableCell(m.get(schedule.modeID).name, subtitle, detail, function () {
             loadPage("editSchedule.html", schedule.ID)
@@ -238,6 +241,33 @@ async function addSchedule() {
     });
 }
 
+async function editSchedule(id) {
+    let m = await modes;
+    $("#modeSelect").empty();
+    let opt = document.createElement("option");
+    opt.innerHTML = "";
+    $("#modeSelect")[0].appendChild(opt);
+    m.forEach(function (item) {
+        let opt = document.createElement("option");
+        opt.value = item.ID;
+        opt.innerHTML = item.name + " (" + item.minTemp + ", " + item.maxTemp + " ±" + item.correction + ")"; // whatever property it has
+
+        // then append it to the select element
+        $("#modeSelect")[0].appendChild(opt);
+    });
+
+    let s = await schedules;
+    let v = s.get(id);
+    $("#scheduleID")[0].value = v.ID;
+    $("#prioritySelect")[0].value = v.priority;
+    $("#modeSelect")[0].value = v.modeID;
+    // TODO $("#dayOfWeek")[0].value = v.dayOfWeek;
+    $("#startTime")[0].value = timeFromSeconds(v.startTime);
+    $("#endTime")[0].value = timeFromSeconds(v.endTime);
+    // TODO $("#startDate")[0].value = v.startDay;
+    // TODO $("#endDate")[0].value = v.endDay;
+}
+
 function weekdaysToMask(weekdays) {
     let mask = 0;
     weekdays.forEach(function (value, i) {
@@ -256,6 +286,10 @@ function dateSelect(date) {
 function secondsFromTime(time) {
     let parts = time.split(":");
     return parts[0]*60*60 + parts[1]*60;
+}
+
+function timeFromSeconds(seconds) {
+    return Math.floor(seconds/3600)+":"+Math.floor((seconds%3600)/60);
 }
 
 function addScheduleForm() {
@@ -284,12 +318,29 @@ function addScheduleForm() {
         StartDay: dateSelect(new Date(Date.parse(data.startDate)))+":00Z",
         EndDay: dateSelect(new Date(Date.parse(data.endDate)))+":00Z",
     };
-    console.log(req)
-    console.log(data.startDate)
-    console.log(Date.parse(data.startDate))
-    console.log(new Date(Date.parse(data.startDate)))
 
     request("/v1/schedule/add", req).done(function(data) {
+        schedules = refreshSchedules();
+        loadPage("schedules.html");
+    }).fail(function(data) {
+        $("#errors")[0].innerHTML = data.responseText;
+    });
+
+    return false;
+}
+
+function deleteScheduleForm() {
+    let data = $('#deleteForm').serializeArray().reduce(function(obj, item) {
+        obj[item.name] = item.value;
+        return obj;
+    }, {});
+
+    let req = {
+        ZoneID: zoneID,
+        ID: parseInt(data.scheduleID)
+    };
+
+    request("/v1/schedule/delete", req).done(function(data) {
         schedules = refreshSchedules();
         loadPage("schedules.html");
     }).fail(function(data) {

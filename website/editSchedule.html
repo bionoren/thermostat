@@ -1,3 +1,70 @@
 <div class="navbar">
     <input type="button" class="btn btn-primary btn-lg" onclick="loadPage('schedules.html')" value="Back">
 </div>
+
+<form id="deleteForm" method="post" onsubmit="return deleteScheduleForm()">
+    <input type="hidden" id="scheduleID" name="scheduleID">
+    <div class="form-group">
+        <label for="prioritySelect">Priority: </label>
+        <select id="prioritySelect" name="prioritySelect" disabled>
+            <option value=""></option>
+            <option value="2">Scheduled</option>
+            <option value="3">Custom</option>
+        </select>
+    </div>
+    <div class="form-group">
+        <label for="modeSelect">Mode: </label>
+        <select id="modeSelect" name="modeSelect" disabled><option value=""></option><option>Test option here</option></select>
+    </div>
+    <div class="row">
+        <div class="form-check form-check-inline">
+            <input id="sunday" type="checkbox" name="dayOfWeek[]" class="form-check-input dayBox" disabled>
+            <label class="form-check-label" for="sunday">S</label>
+        </div>
+        <div class="form-check form-check-inline">
+            <input id="monday" type="checkbox" name="dayOfWeek[]" class="form-check-input dayBox" disabled>
+            <label class="form-check-label" for="monday">M</label>
+        </div>
+        <div class="form-check form-check-inline">
+            <input id="tuesday" type="checkbox" name="dayOfWeek[]" class="form-check-input dayBox" disabled>
+            <label class="form-check-label" for="tuesday">T</label>
+        </div>
+        <div class="form-check form-check-inline">
+            <input id="wednesday" type="checkbox" name="dayOfWeek[]" class="form-check-input dayBox" disabled>
+            <label class="form-check-label" for="wednesday">W</label>
+        </div>
+        <div class="form-check form-check-inline">
+            <input id="thursday" type="checkbox" name="dayOfWeek[]" class="form-check-input dayBox" disabled>
+            <label class="form-check-label" for="thursday">T</label>
+        </div>
+        <div class="form-check form-check-inline">
+            <input id="friday" type="checkbox" name="dayOfWeek[]" class="form-check-input dayBox" disabled>
+            <label class="form-check-label" for="friday">F</label>
+        </div>
+        <div class="form-check form-check-inline">
+            <input id="saturday" type="checkbox" name="dayOfWeek[]" class="form-check-input dayBox" disabled>
+            <label class="form-check-label" for="saturday">S</label>
+        </div>
+    </div>
+    <div class="form-group">
+        <label for="startTime">startTime:</label>
+        <input id="startTime" name="startTime" type="time" placeholder="Select Time.." disabled>
+    </div>
+    <div class="form-group">
+        <label for="endTime">stopTime:</label>
+        <input id="endTime" name="endTime" type="time" placeholder="Select Time.." disabled>
+    </div>
+    <div class="form-group">
+        <label for="startDate">start:</label>
+        <input id="startDate" name="startDate" type="datetime-local" placeholder="Select Date.." disabled>
+    </div>
+    <div class="form-group">
+        <label for="endDate">end:</label>
+        <input id="endDate" name="endDate" type="datetime-local" placeholder="Select Date.." disabled>
+    </div>
+    <div class="row">
+        <input type="submit" name="submit" value="Delete" class="btn btn-lg btn-primary">
+    </div>
+</form>
+<br>
+<div id="delete"></div>

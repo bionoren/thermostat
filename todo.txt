@@ -9,9 +9,9 @@
 √ schedules with the same priority must not overlap
 √ static DHCP
 √ finish addSchedules form
+√ editSchedules (delete) form
 temp up/down support
 custom mode dropdown support
-editSchedules (delete) form
 web login page
 port forwarding
 rotate secret and certs
