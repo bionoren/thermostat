@@ -4,17 +4,13 @@
     <meta http-equiv="content-type" content="text/html; charset=UTF-8">
     <script type="text/javascript" src="sha3.js"></script>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.2/moment.min.js"></script>
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/tempusdominus-bootstrap-4/5.0.1/js/tempusdominus-bootstrap-4.min.js"></script>
-    <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tempusdominus-bootstrap-4/5.0.1/css/tempusdominus-bootstrap-4.min.css" />
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
     <script type="text/javaScript">
         function request(path, data) {
             let tm = Math.floor(Date.now()/1000);
             let payload = JSON.stringify(data);
 
-            let key = "h2Ig7D5JHILSNi1ybf33aQmoy3fruUn3sqETVjNBjwcofyIly5nxuKf3yBbK5c6x5f4kZ5ihPD9TFZXOWWUJz74FCUlpAoMHXMXantIVrMBQFVKvh8eRhru0OG+Ckin009QMntYz1TWNo7lXgHCobpziJb/ydZQK1mQU0e9IIiM=";
+            let key = localStorage.getItem("password");
             let sig = path+tm+payload;
 
             let shaObj = new jsSHA("SHA3-512", "TEXT");
@@ -30,17 +26,45 @@
             return $.post(path, JSON.stringify(msg))
         }
 
-        request("/js.js", "").done(function(data) {
-            let js = document.createElement('script');
-            js.language = 'text/javasScript';
-            js.appendChild(document.createTextNode(data));
-            document.getElementsByTagName("head")[0].appendChild(js);
-        });
+        function login() {
+            let data = $('#login').serializeArray().reduce(function(obj, item) {
+                obj[item.name] = item.value;
+                return obj;
+            }, {});
+            localStorage.setItem("password", data.password);
+            load();
+
+            return false;
+        }
+
+        if(localStorage.getItem("password")) {
+            load();
+        }
+
+        function load() {
+            request("/js.js", "").done(function (data) {
+                let js = document.createElement('script');
+                js.language = 'text/javasScript';
+                js.appendChild(document.createTextNode(data));
+                document.getElementsByTagName("head")[0].appendChild(js);
+            });
+        }
     </script>
 </head>
 <body>
 <div id="mainContainer" class="container-fluid">
-    <!-- TODO: I need to provide an authentication page that fetches the actual content and that's it, so I'm not taunting an attacker with what this is for-->
+    <form id="login" method="post" onsubmit="return login()">
+        <div class="row">
+            <div class="col">
+                <input class="form-control-lg" type="password" name="password">
+            </div>
+        </div>
+        <div class="row">
+            <div class="col">
+                <input class="btn btn-lg btn-primary" type="submit" name="submit" value="Login">
+            </div>
+        </div>
+    </form>
 </div>
 </body>
 </html>

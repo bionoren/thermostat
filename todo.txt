@@ -12,9 +12,9 @@
 √ editSchedules (delete) form
 √ temp up/down support
 √ custom mode dropdown support
-web login page
-port forwarding
-rotate secret and certs
+√ web login page
+√ port forwarding
+√ rotate secret and certs
 
 √ solder in new temp sensor
 √ shorten thermostat wires
