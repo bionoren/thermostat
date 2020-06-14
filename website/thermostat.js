@@ -123,6 +123,32 @@ function loadPage(page, args) {
     })
 }
 
+function customize(sender) {
+    let req = {
+        ZoneID: zoneID,
+    };
+
+    switch(sender.id) {
+        case "tempUp":
+            req.Delta = 1;
+            break;
+        case "tempDown":
+            req.Delta = -1;
+            break;
+        case "modeSelect":
+            req.ModeID = sender.value;
+            break;
+    }
+
+    request("/v1/edit", req).done(function(data) {
+        schedules = refreshSchedules();
+        modes = refreshModes();
+        loadPage("zone.html");
+    }).fail(function(data) {
+        $("#errors")[0].innerHTML = data.responseText;
+    });
+}
+
 async function editMode(id) {
     let m = await modes;
     let v = m.get(id);
