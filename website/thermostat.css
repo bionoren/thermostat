@@ -39,3 +39,10 @@ body {
 input[type="checkbox"] {
     zoom: 3;
 }
+
+.relayOn {
+    color: lightgreen;
+}
+
+.relayOff {
+}

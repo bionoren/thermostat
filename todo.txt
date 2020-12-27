@@ -18,6 +18,15 @@
 
 √ solder in new temp sensor
 √ shorten thermostat wires
+√ solder in fan
 
-test sensor with mild airflow
+√ test sensor with mild airflow
+√ make temp sensor offsets and fan on/off configurable
+√ move thermostat below existing and test for ~24 hours
+√ Use https://developer.apple.com/library/archive/documentation/AppleApplications/Reference/SafariWebContent/ConfiguringWebApplications/ConfiguringWebApplications.html to get a reasonable app icon
+√ Inspect logs, especially run log. Something is trying to toggle systems too quickly
+Set appropriate sensor offsets
+√ Add a temperatureRangeDivider that is a float64, not less than 1, and defaults to 1, that divides the temperature range (so a divisor of 4 means 4 sensor degrees = 1 real degree)
 test power supply
+
+https://developers.homebridge.io/#/service/Thermostat

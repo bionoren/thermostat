@@ -43,6 +43,8 @@ func (c nopController) SetHeat(_ bool) bool {
 	return false
 }
 
+func (c nopController) Reset() {}
+
 var _ system.Controller = &nopController{}
 
 type constantSensor float64

@@ -342,6 +342,17 @@ func editHandler(ctx context.Context, msg json.RawMessage) request.ApiResponse {
 		return request.NewResponse(http.StatusInternalServerError, err.Error())
 	}
 
+	settingList := settings[:0]
+	for _, s := range settings {
+		if s.Priority == setting.CUSTOM {
+			if err := s.Delete(ctx); err != nil {
+				return request.NewResponse(http.StatusInternalServerError, err.Error())
+			}
+		} else {
+			settingList = append(settingList, s)
+		}
+	}
+	settings = settingList
 	now := time.Now()
 	next := nextConfigChange(now, settings, z.Setting().Priority)
 	if next.IsZero() {

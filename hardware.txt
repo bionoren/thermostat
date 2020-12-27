@@ -1,0 +1,11 @@
+2 separate inputs for power (Rh and Rc), with a jumper so they can be the same
+1 common wire input
+1 fan input (1 relay)
+2 inputs for AC (1 relay, and space for another)
+2 inputs for heat (1 relay, and space for another). These will be repurposed for O/B on a heat pump (label as such)
+1 input for AUX/Emergency heat heat (space for 1 relay)
+-----
+9 inputs
+6 relays (3 in place, space for 3 more)
+
+This supports multi-stage heat+cool, as well as a multi-stage heat pump with multi-stage aux heat

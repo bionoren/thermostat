@@ -22,6 +22,7 @@ type Controller interface {
 	SetAC(on bool) bool
 	Heat() bool
 	SetHeat(on bool) bool
+	Reset()
 }
 
 type Zone struct {
@@ -57,13 +58,11 @@ func (z *Zone) monitor(ctx context.Context) {
 	defer func() {
 		if r := recover(); r != nil {
 			logrus.WithField("recovered", r).WithField("zone", z.zoneID).Error("monitoring panicked")
-			z.controller.SetAC(false)
-			z.controller.SetHeat(false)
-			z.controller.SetFan(false)
+			z.controller.Reset()
 		}
 	}()
 
-	interval := 30 * time.Second
+	interval := 60 * time.Second
 	schedules, err := setting.All(ctx, z.ID())
 	if err != nil {
 		logrus.WithField("zoneID", z.ID()).WithError(err).Panic("unable to load settings to initialize zone monitoring")
@@ -74,24 +73,27 @@ func (z *Zone) monitor(ctx context.Context) {
 
 	tick := time.NewTicker(interval)
 
-	z.controller.SetFan(false)
-	ac := z.controller.SetAC(false)
-	heat := z.controller.SetHeat(false)
-
+	var ac, heat bool
 	temp := z.sensor.Temperature()
 	for {
 		z.setting = currentSetting(schedules)
 		mode := z.setting.Mode(ctx)
 
-		if temp >= mode.MaxTemp-mode.Correction {
-			heat = z.controller.SetHeat(false)
-			ac = z.controller.SetAC(true)
-		} else if temp <= mode.MinTemp+mode.Correction {
-			ac = z.controller.SetAC(false)
-			heat = z.controller.SetHeat(true)
-		} else if heat || ac {
-			heat = z.controller.SetHeat(false)
-			ac = z.controller.SetAC(false)
+		switch {
+		case ac:
+			if temp <= mode.MaxTemp-mode.Correction {
+				ac = z.controller.SetAC(false)
+			}
+		case heat:
+			if temp >= mode.MinTemp+mode.Correction {
+				heat = z.controller.SetHeat(false)
+			}
+		default:
+			if temp > mode.MaxTemp {
+				ac = z.controller.SetAC(true)
+			} else if temp < mode.MinTemp {
+				heat = z.controller.SetHeat(true)
+			}
 		}
 
 		log.Log(z.controller.Fan(), z.controller.AC(), z.controller.Heat(), temp, z.sensor.Humidity())
@@ -130,5 +132,19 @@ func GetZone(id int64) (*Zone, error) {
 func (z *Zone) Startup() {
 	zones[z.zoneID] = z
 
-	go z.monitor(context.Background())
+	go func() {
+		lastPanic := time.Now()
+		for {
+			z.controller.Reset()
+			z.monitor(context.Background())
+			now := time.Now()
+			if now.Sub(lastPanic) < time.Hour {
+				defer z.controller.Reset() // worth a try. Deferred in case it also causes a panic
+				logrus.WithField("timeSincePanic", now.Sub(lastPanic).String()).Fatal("exiting because panics are in close proximity. Not sure what state the system is in anymore...")
+				break
+			} else {
+				lastPanic = now
+			}
+		}
+	}()
 }

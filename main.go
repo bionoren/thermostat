@@ -18,10 +18,16 @@ func main() {
 	ctx := context.Background()
 
 	var test bool
+	var stop bool
 	flag.BoolVar(&test, "post", false, "Perform a power on self test of systems and sensors")
+	flag.BoolVar(&stop, "stop", false, "Turn off all relays")
 	flag.Parse()
 	if test {
 		selfTest()
+		return
+	}
+	if stop {
+		turnOff()
 		return
 	}
 
@@ -31,7 +37,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	sens := sensor.NewHIH6020(uint16(addr[0]), -10, 0)
+	sens := sensor.NewHIH6020(uint16(addr[0]), viper.GetFloat64("tempCorrection"), viper.GetFloat64("temperatureRangeDivider"), viper.GetFloat64("humCorrection"))
 	zone, err := system.NewZone(ctx, "default", sys, sens)
 	if err != nil {
 		panic(err)
@@ -59,11 +65,21 @@ func selfTest() {
 	if err != nil {
 		panic(err)
 	}
-	sens := sensor.NewHIH6020(uint16(addr[0]), 0, 0)
+	sens := sensor.NewHIH6020(uint16(addr[0]), 0, 1, 0)
 	logrus.WithField("temp", sens.Temperature()).Info("current temp")
 
 	h := system.NewHVAC(viper.GetInt("fanPin"), viper.GetInt("acPin"), viper.GetInt("heatPin"))
 	h.Test()
 
 	logrus.WithField("temp", sens.Temperature()).Info("current temp")
+}
+
+func turnOff() {
+	logrus.SetOutput(os.Stderr)
+	logrus.SetLevel(logrus.DebugLevel)
+	logrus.SetFormatter(&logrus.TextFormatter{})
+	logrus.Info("Powering off...")
+
+	h := system.NewHVAC(viper.GetInt("fanPin"), viper.GetInt("acPin"), viper.GetInt("heatPin"))
+	h.Reset()
 }

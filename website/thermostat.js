@@ -45,7 +45,6 @@ function refreshSchedules() {
     });
 }
 
-let lastData = null;
 let currentData = null
 
 async function refresh() {
@@ -54,13 +53,6 @@ async function refresh() {
     z.forEach(function (zone) {
         $("#mainList")[0].appendChild(tableCell(zone.name, "", "", function () {
             zoneID = zone.ID
-            currentData = new Promise(function refresh(resolve, reject) {
-                request("/v1/status", {zoneID: zoneID}).done(function(data) {
-                    resolve(JSON.parse(data));
-                }).fail(function(data) {
-                    reject(data.responseText);
-                })
-            });
             modes = refreshModes()
             schedules = refreshSchedules()
             loadPage("zone.html")
@@ -69,11 +61,15 @@ async function refresh() {
 }
 
 async function refreshZonePage() {
-    let data = lastData;
-    if(data == null) {
-        lastData = await currentData;
-        data = lastData;
-    }
+    currentData = new Promise(function refresh(resolve, reject) {
+        request("/v1/status", {zoneID: zoneID}).done(function(data) {
+            resolve(JSON.parse(data));
+        }).fail(function(data) {
+            reject(data.responseText);
+        })
+    });
+
+    let data = await currentData;
 
     $("#temp")[0].innerHTML = roundTemp(data.Temperature);
 
@@ -89,9 +85,28 @@ async function refreshZonePage() {
     });
 
     $("#zoneSchedule")[0].innerHTML = JSON.stringify(schedules, null, 2);
+
+    if(data.Fan) {
+        $("#fan")[0].setAttribute("class", "relayOn");
+    } else {
+        $("#fan")[0].setAttribute("class", "relayOff");
+    }
+    if(data.AC) {
+        $("#cool")[0].setAttribute("class", "relayOn");
+    } else {
+        $("#cool")[0].setAttribute("class", "relayOff");
+    }
+    if(data.Heat) {
+        $("#heat")[0].setAttribute("class", "relayOn");
+    } else {
+        $("#heat")[0].setAttribute("class", "relayOff");
+    }
 }
 
+let zoneInterval;
+
 function loadPage(page, args) {
+    clearInterval(zoneInterval);
     request("/v1/"+page, "").done(function(data) {
         $("#mainContainer")[0].innerHTML = data;
 
@@ -100,7 +115,8 @@ function loadPage(page, args) {
                 refresh();
                 break;
             case "zone.html":
-                refreshZonePage();
+                refreshZonePage()
+                zoneInterval = setInterval(refreshZonePage, 10000); // 10 seconds
                 break;
             case "modes.html":
                 refreshModesPage();

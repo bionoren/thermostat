@@ -17,6 +17,10 @@ func init() {
 	viper.SetDefault("minTemp", 60)
 	viper.SetDefault("maxTemp", 85)
 	viper.SetDefault("apiPort", 443)
+	viper.SetDefault("tempCorrection", 0)
+	viper.SetDefault("temperatureRangeDivider", 1.0)
+	viper.SetDefault("humCorrection", 0)
+	viper.SetDefault("sensorFan", false)
 	viper.SetDefault("templateDir", "/usr/share/thermostat")
 	viper.SetDefault("db.migrations", "/usr/share/thermostat")
 

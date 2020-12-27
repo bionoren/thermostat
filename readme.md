@@ -32,9 +32,13 @@ Config:
 * apiKey (string): private key for the api certificate
 * apiSecret (string): base64 encoded api secret key
 * tempSensor (string): temperature sensor i2c bus address (hex in the form 0x##)
+* tempCorrection (float): adjustment to add to the temperature sensor value
+* humCorrection (float): adjustment to add to the humidity sensor value
+* temperatureRangeDivider (float): default 1, divides the temperature range (so a divisor of 4 means 4 sensor degrees = 1 real degree). Must be >= 1
 * fanPin (int): GPIO pin for the blower
 * acPin (int): GPIO pin for the AC compressor
 * heatPin (int): GPIO pin for the heater
+* sensorFanPin (int): GPIO pin for the sensor fan
 * db.file (string): path to the database file
 * db.migrations (string): path to the database migrations
 * log.type (string): stderr or file

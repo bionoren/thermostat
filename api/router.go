@@ -37,11 +37,11 @@ func StartApi(cert, key []byte) {
 
 	mux.HandleFunc("/", web.MimePage("index.html", "text/html; charset=utf-8"))
 	mux.HandleFunc("/sha3.js", web.MimePage("sha3.js", "application/javascript; charset=utf-8"))
+	mux.HandleFunc("/icon.png", web.MimePage("icon.png", "image/png"))
 
 	mux.HandleFunc("/v1/main.html", handlerWrapper(web.Page("main.html"), auth, false, false))
 	mux.HandleFunc("/v1/zone.html", handlerWrapper(web.Page("zone.html"), auth, false, false))
 	mux.HandleFunc("/js.js", handlerWrapper(web.Page("thermostat.js"), auth, false, false))
-	mux.HandleFunc("/v1/thermostat.html", handlerWrapper(web.Page("thermostat.html"), auth, false, false))
 	mux.HandleFunc("/v1/thermostat.css", handlerWrapper(web.Page("thermostat.css"), auth, false, false))
 	mux.HandleFunc("/v1/modes.html", handlerWrapper(web.Page("modes.html"), auth, false, false))
 	mux.HandleFunc("/v1/addModes.html", handlerWrapper(web.Page("addModes.html"), auth, false, false))

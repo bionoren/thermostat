@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-const switchInterval = 60
+const switchInterval = 120
 
 type hvac struct {
 	fan  bool
@@ -35,17 +35,11 @@ func NewHVAC(fan, ac, heat int) *hvac {
 	if cont.fanPin == nil {
 		logrus.WithField("pin", pin).Panic("Failed to find pin")
 	}
-	if err := cont.fanPin.Out(gpio.Low); err != nil {
-		logrus.WithField("pin", pin).Fatal(err)
-	}
 
 	pin = fmt.Sprintf("GPIO%d", ac)
 	cont.acPin = gpioreg.ByName(pin)
 	if cont.acPin == nil {
 		logrus.WithField("pin", pin).Panic("Failed to find pin")
-	}
-	if err := cont.acPin.Out(gpio.Low); err != nil {
-		logrus.WithField("pin", pin).Fatal(err)
 	}
 
 	pin = fmt.Sprintf("GPIO%d", heat)
@@ -53,11 +47,22 @@ func NewHVAC(fan, ac, heat int) *hvac {
 	if cont.heatPin == nil {
 		logrus.WithField("pin", pin).Panic("Failed to find pin")
 	}
-	if err := cont.heatPin.Out(gpio.Low); err != nil {
-		logrus.WithField("pin", pin).Fatal(err)
-	}
+
+	cont.Reset()
 
 	return cont
+}
+
+func (c *hvac) Reset() {
+	if err := c.fanPin.Out(gpio.Low); err != nil {
+		logrus.WithField("pin", c.fanPin.String()).Fatal(err)
+	}
+	if err := c.acPin.Out(gpio.Low); err != nil {
+		logrus.WithField("pin", c.acPin.String()).Fatal(err)
+	}
+	if err := c.heatPin.Out(gpio.Low); err != nil {
+		logrus.WithField("pin", c.heatPin.String()).Fatal(err)
+	}
 }
 
 func (c hvac) Fan() bool {
@@ -107,11 +112,21 @@ func (c *hvac) SetAC(on bool) bool {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 
-	if !c.canSwitch(on) {
+	now := time.Now()
+	if !c.canSwitch(now, on) {
 		return c.ac
 	}
 
-	c.SetFan(on)
+	if on {
+		time.AfterFunc(time.Second*15, func() {
+			c.SetFan(true)
+		})
+	} else {
+		// this needs to be long enough to dehumidify the air duct
+		time.AfterFunc(time.Second*30, func() {
+			c.SetFan(false)
+		})
+	}
 
 	logrus.WithField("on", on).Info("toggling AC")
 
@@ -124,7 +139,7 @@ func (c *hvac) SetAC(on bool) bool {
 	}
 
 	c.ac = on
-	c.last = time.Now()
+	c.last = now
 	return c.AC()
 }
 
@@ -140,7 +155,8 @@ func (c *hvac) SetHeat(on bool) bool {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 
-	if !c.canSwitch(on) {
+	now := time.Now()
+	if !c.canSwitch(now, on) {
 		return c.heat
 	}
 
@@ -154,17 +170,27 @@ func (c *hvac) SetHeat(on bool) bool {
 		log.Fatal(err)
 	}
 
-	c.SetFan(on)
+	if on {
+		// this is probably too short, but I don't want the heater to overheat
+		time.AfterFunc(time.Second*15, func() {
+			c.SetFan(true)
+		})
+	} else {
+		time.AfterFunc(time.Second*30, func() {
+			c.SetFan(false)
+		})
+	}
 
 	c.heat = on
-	c.last = time.Now()
+	c.last = now
 	return c.Heat()
 }
 
-func (c hvac) canSwitch(on bool) bool {
-	if on && time.Since(c.last) < time.Second*switchInterval {
+func (c hvac) canSwitch(now time.Time, on bool) bool {
+	delta := time.Since(c.last).Round(time.Second)
+	if on && delta < time.Second*switchInterval {
 		logrus.WithFields(logrus.Fields{
-			"since": time.Since(c.last),
+			"since": delta.String(),
 			"stack": string(debug.Stack()),
 		}).Warn("Attempted to engage a system too soon")
 		return false
@@ -179,12 +205,11 @@ func (c hvac) Test() {
 	c.SetAC(true)
 	time.Sleep(time.Second * (switchInterval + 1))
 	c.SetAC(false)
-	c.SetFan(true)
 	time.Sleep(time.Second * (switchInterval + 1))
+	c.SetFan(true)
 	c.SetHeat(true)
 	time.Sleep(time.Second * (switchInterval + 1))
 	c.SetHeat(false)
-	c.SetFan(true)
 	time.Sleep(time.Second * (switchInterval + 1))
 	c.SetFan(false)
 }
